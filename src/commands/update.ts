@@ -5,7 +5,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 import chalk from 'chalk';
-import { getDevDependencies } from '../versions.js';
+import { getDevDependencies, VERSIONS,
+
+}  from '../versions.js';
 import {
     getGitignoreTemplate,
     getCursorrrulesTemplate,
@@ -366,6 +368,9 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         await fs.ensureDir(path.join(projectDir, '.husky'));
         await fs.writeFile(path.join(projectDir, '.husky/pre-commit'), getHuskyPreCommitTemplate());
         console.log(chalk.gray('  更新: .husky/pre-commit'));
+
+        // 更新 package.json 添加 husky 配置
+        await updateHuskyConfig(projectDir);
     }
 
     // 同步 .gitignore，检查自动生成的文件是否被修改
@@ -381,12 +386,28 @@ export async function createEslintConfigFile(projectDir: string): Promise<void>
 }
 
 /**
+ * 检测 JSON 文件的缩进风格
+ */
+function detectIndent(content: string): string
+{
+    const match = content.match(/^[ \t]+/m);
+
+    return match ? match[0] : '    ';
+}
+
+/**
  * 更新 package.json 中的 devDependencies 版本
  */
 async function updateDependencies(projectDir: string, config: Feng3dConfig): Promise<void>
 {
     const packageJsonPath = path.join(projectDir, 'package.json');
-    const packageJson = await fs.readJson(packageJsonPath);
+
+    // 读取原始内容以检测缩进风格
+    const originalContent = await fs.readFile(packageJsonPath, 'utf-8');
+    const indent = detectIndent(originalContent);
+    const hasTrailingNewline = originalContent.endsWith('\n');
+
+    const packageJson = JSON.parse(originalContent);
 
     const standardDeps = getDevDependencies({
         includeVitest: config.vitest?.enabled !== false,
@@ -394,18 +415,99 @@ async function updateDependencies(projectDir: string, config: Feng3dConfig): Pro
     });
 
     // 只更新已存在的依赖的版本
+    let updated = false;
+
     if (packageJson.devDependencies)
     {
         for (const [key, value] of Object.entries(standardDeps))
         {
-            if (key in packageJson.devDependencies)
+            if (key in packageJson.devDependencies && packageJson.devDependencies[key] !== value)
             {
                 packageJson.devDependencies[key] = value;
+                updated = true;
             }
         }
     }
 
-    await fs.writeJson(packageJsonPath, packageJson, { spaces: 4 });
+    // 只有在有更新时才写入文件
+    if (updated)
+    {
+        let newContent = JSON.stringify(packageJson, null, indent);
+
+        if (hasTrailingNewline)
+        {
+            newContent += '\n';
+        }
+        await fs.writeFile(packageJsonPath, newContent);
+    }
+}
+
+/**
+ * 更新 package.json 添加 husky 配置
+ */
+async function updateHuskyConfig(projectDir: string): Promise<void>
+{
+    const packageJsonPath = path.join(projectDir, 'package.json');
+
+    // 读取原始内容以检测缩进风格
+    const originalContent = await fs.readFile(packageJsonPath, 'utf-8');
+    const indent = detectIndent(originalContent);
+    const hasTrailingNewline = originalContent.endsWith('\n');
+
+    const packageJson = JSON.parse(originalContent);
+    let updated = false;
+
+    // 添加 husky 和 lint-staged 依赖
+    if (!packageJson.devDependencies)
+    {
+        packageJson.devDependencies = {};
+    }
+    if (!packageJson.devDependencies.husky)
+    {
+        packageJson.devDependencies.husky = VERSIONS.husky;
+        updated = true;
+        console.log(chalk.gray(`  添加: devDependencies.husky = "${VERSIONS.husky}"`));
+    }
+    if (!packageJson.devDependencies['lint-staged'])
+    {
+        packageJson.devDependencies['lint-staged'] = VERSIONS['lint-staged'];
+        updated = true;
+        console.log(chalk.gray(`  添加: devDependencies.lint-staged = "${VERSIONS['lint-staged']}"`));
+    }
+
+    // 添加 prepare 脚本
+    if (!packageJson.scripts)
+    {
+        packageJson.scripts = {};
+    }
+    if (packageJson.scripts.prepare !== 'husky')
+    {
+        packageJson.scripts.prepare = 'husky';
+        updated = true;
+        console.log(chalk.gray('  添加: scripts.prepare = "husky"'));
+    }
+
+    // 添加 lint-staged 配置
+    if (!packageJson['lint-staged'])
+    {
+        packageJson['lint-staged'] = {
+            '*.{js,ts}': ['eslint --fix --max-warnings 0'],
+        };
+        updated = true;
+        console.log(chalk.gray('  添加: lint-staged 配置'));
+    }
+
+    // 只有在有更新时才写入文件
+    if (updated)
+    {
+        let newContent = JSON.stringify(packageJson, null, indent);
+
+        if (hasTrailingNewline)
+        {
+            newContent += '\n';
+        }
+        await fs.writeFile(packageJsonPath, newContent);
+    }
 }
 
 /**
