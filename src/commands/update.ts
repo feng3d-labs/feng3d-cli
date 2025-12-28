@@ -414,18 +414,51 @@ async function updateDependencies(projectDir: string, config: Feng3dConfig): Pro
         includeTypedoc: config.typedoc?.enabled !== false,
     });
 
-    // 只更新已存在的依赖的版本
+    // 添加或更新 devDependencies
     let updated = false;
 
-    if (packageJson.devDependencies)
+    if (!packageJson.devDependencies)
     {
-        for (const [key, value] of Object.entries(standardDeps))
+        packageJson.devDependencies = {};
+    }
+
+    for (const [key, value] of Object.entries(standardDeps))
+    {
+        if (!(key in packageJson.devDependencies))
         {
-            if (key in packageJson.devDependencies && packageJson.devDependencies[key] !== value)
-            {
-                packageJson.devDependencies[key] = value;
-                updated = true;
-            }
+            packageJson.devDependencies[key] = value;
+            updated = true;
+            console.log(chalk.gray(`  添加: devDependencies.${key} = "${value}"`));
+        }
+        else if (packageJson.devDependencies[key] !== value)
+        {
+            packageJson.devDependencies[key] = value;
+            updated = true;
+            console.log(chalk.gray(`  更新: devDependencies.${key} = "${value}"`));
+        }
+    }
+
+    // 添加标准 scripts
+    if (!packageJson.scripts)
+    {
+        packageJson.scripts = {};
+    }
+
+    const standardScripts: Record<string, string> = {
+        lint: 'eslint . --ext .js,.ts --max-warnings 0',
+        lintfix: 'npm run lint -- --fix',
+        docs: 'typedoc',
+        upload_oss: 'npm run docs && feng3d-cli oss_upload_dir',
+        update: 'npx feng3d-cli update && npm install',
+    };
+
+    for (const [key, value] of Object.entries(standardScripts))
+    {
+        if (!(key in packageJson.scripts))
+        {
+            packageJson.scripts[key] = value;
+            updated = true;
+            console.log(chalk.gray(`  添加: scripts.${key}`));
         }
     }
 
