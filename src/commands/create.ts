@@ -7,11 +7,11 @@ import path from 'path';
 import chalk from 'chalk';
 import { getDevDependencies } from '../versions.js';
 import {
-    gitignoreTemplate,
-    cursorrrulesTemplate,
-    tsconfigTemplate,
-    vitestConfigTemplate,
-    createTypedocConfig,
+    getGitignoreTemplate,
+    getCursorrrulesTemplate,
+    getTsconfigTemplate,
+    getVitestConfigTemplate,
+    getTypedocConfig,
 } from '../templates.js';
 import { createEslintConfigFile } from './update.js';
 
@@ -46,15 +46,15 @@ export async function createProject(name: string, options: CreateOptions): Promi
     console.log(chalk.gray('  创建: package.json'));
 
     // 创建 tsconfig.json
-    await fs.writeJson(path.join(projectDir, 'tsconfig.json'), tsconfigTemplate, { spaces: 4 });
+    await fs.writeJson(path.join(projectDir, 'tsconfig.json'), getTsconfigTemplate(), { spaces: 4 });
     console.log(chalk.gray('  创建: tsconfig.json'));
 
     // 创建 .gitignore
-    await fs.writeFile(path.join(projectDir, '.gitignore'), gitignoreTemplate);
+    await fs.writeFile(path.join(projectDir, '.gitignore'), getGitignoreTemplate());
     console.log(chalk.gray('  创建: .gitignore'));
 
     // 创建 .cursorrules
-    await fs.writeFile(path.join(projectDir, '.cursorrules'), cursorrrulesTemplate);
+    await fs.writeFile(path.join(projectDir, '.cursorrules'), getCursorrrulesTemplate());
     console.log(chalk.gray('  创建: .cursorrules'));
 
     // 创建 eslint.config.js
@@ -64,12 +64,12 @@ export async function createProject(name: string, options: CreateOptions): Promi
     // 创建 vitest.config.ts
     if (options.vitest !== false)
     {
-        await fs.writeFile(path.join(projectDir, 'vitest.config.ts'), vitestConfigTemplate);
+        await fs.writeFile(path.join(projectDir, 'vitest.config.ts'), getVitestConfigTemplate());
         console.log(chalk.gray('  创建: vitest.config.ts'));
     }
 
     // 创建 typedoc.json
-    const typedocConfig = createTypedocConfig({ name: `@feng3d/${name}`, repoName: name });
+    const typedocConfig = getTypedocConfig({ name: `@feng3d/${name}`, repoName: name });
     await fs.writeJson(path.join(projectDir, 'typedoc.json'), typedocConfig, { spaces: 4 });
     console.log(chalk.gray('  创建: typedoc.json'));
 
