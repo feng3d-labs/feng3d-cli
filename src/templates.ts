@@ -10,7 +10,6 @@ dist
 lib
 public
 out
-/package-lock.json
 # 自动生成的测试配置文件
 **/test-config.ts
 # 测试构建输出目录
