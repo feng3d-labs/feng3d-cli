@@ -29,11 +29,19 @@ export function getCursorrrulesTemplate(): string
 }
 
 /**
- * 获取 tsconfig.json 模板内容
+ * 获取 tsconfig.json 模板内容（对象形式）
  */
 export function getTsconfigTemplate(): object
 {
     return fs.readJsonSync(path.join(TEMPLATES_DIR, 'tsconfig.json'));
+}
+
+/**
+ * 获取 tsconfig.json 模板内容（字符串形式）
+ */
+export function getTsconfigTemplateString(): string
+{
+    return fs.readFileSync(path.join(TEMPLATES_DIR, 'tsconfig.json'), 'utf-8');
 }
 
 /**

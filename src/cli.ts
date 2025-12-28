@@ -56,6 +56,7 @@ program
     .option('--husky', '仅更新 husky pre-commit hook')
     .option('--license', '仅更新 LICENSE 文件')
     .option('--vscode', '仅更新 .vscode/settings.json')
+    .option('--tsconfig', '仅更新 tsconfig.json')
     .option('--all', '更新所有配置')
     .action(async (options) =>
     {

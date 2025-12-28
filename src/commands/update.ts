@@ -21,6 +21,7 @@ import {
     getHuskyPreCommitTemplate,
     getLicenseTemplate,
     getVscodeSettingsTemplate,
+    getTsconfigTemplateString,
     detectSchemaPath,
 } from '../templates.js';
 import { Feng3dConfig, DEFAULT_CONFIG, DEFAULT_UPDATE_CONFIG, UpdateConfig } from '../types/config.js';
@@ -40,6 +41,7 @@ export interface UpdateOptions {
     husky?: boolean;
     license?: boolean;
     vscode?: boolean;
+    tsconfig?: boolean;
     all?: boolean;
 }
 
@@ -65,6 +67,7 @@ const AUTO_GENERATED_FILES: Array<{
     { path: 'test/_.test.ts', getTemplate: (ctx) => getTestIndexTemplate({ name: ctx.name }) },
     { path: '.husky/pre-commit', getTemplate: () => getHuskyPreCommitTemplate() },
     { path: '.vscode/settings.json', getTemplate: () => getVscodeSettingsTemplate() },
+    // tsconfig.json 不在此列表中，因为它通常需要项目特定的自定义配置
 ];
 
 /**
@@ -186,7 +189,8 @@ function hasAnyUpdateOption(options: UpdateOptions): boolean
 {
     return !!(options.config || options.eslint || options.gitignore || options.cursorrules ||
               options.publish || options.pages || options.pullRequest || options.typedoc ||
-              options.test || options.deps || options.husky || options.license || options.vscode);
+              options.test || options.deps || options.husky || options.license || options.vscode ||
+              options.tsconfig);
 }
 
 /**
@@ -218,6 +222,7 @@ function mergeUpdateOptions(cliOptions: UpdateOptions, configUpdate: UpdateConfi
             husky: cliOptions.husky || false,
             license: cliOptions.license || false,
             vscode: cliOptions.vscode || false,
+            tsconfig: cliOptions.tsconfig || false,
         };
     }
 
@@ -414,6 +419,23 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         await fs.ensureDir(path.join(projectDir, '.vscode'));
         await fs.writeFile(path.join(projectDir, '.vscode/settings.json'), getVscodeSettingsTemplate());
         console.log(chalk.gray('  更新: .vscode/settings.json'));
+    }
+
+    // 更新 tsconfig.json（仅在忽略列表中时覆盖）
+    if (updateConfig.tsconfig)
+    {
+        const tsconfigPath = path.join(projectDir, 'tsconfig.json');
+        const isIgnored = await isFileInGitignore(projectDir, 'tsconfig.json');
+
+        if (isIgnored || !await fs.pathExists(tsconfigPath))
+        {
+            await fs.writeFile(tsconfigPath, getTsconfigTemplateString());
+            console.log(chalk.gray(isIgnored ? '  覆盖: tsconfig.json（在忽略列表中）' : '  创建: tsconfig.json'));
+        }
+        else
+        {
+            console.log(chalk.gray('  跳过: tsconfig.json（已存在且不在忽略列表中）'));
+        }
     }
 
     // 同步 .gitignore，检查自动生成的文件是否被修改
