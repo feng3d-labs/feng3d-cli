@@ -44,6 +44,14 @@ export async function ossUploadDir(localDirPath: string, ossDirPath: string): Pr
         console.log('上传失败的文件列表:');
         failedFiles.forEach((file) => console.log(file));
     }
+
+    // 打印访问路径
+    if (successCount > 0)
+    {
+        const baseUrl = config.baseUrl || `https://${config.bucket}.${config.region}.aliyuncs.com`;
+        const accessUrl = `${baseUrl}/${ossDirPath}/`;
+        console.log(`\n📎 访问路径: ${accessUrl}`);
+    }
 }
 
 /**
@@ -73,6 +81,8 @@ interface OSSConfig {
     accessKeyId: string;
     accessKeySecret: string;
     bucket: string;
+    /** 自定义访问域名，如 https://feng3d.com */
+    baseUrl?: string;
 }
 
 /**
@@ -126,6 +136,20 @@ function collectFiles(dirPath: string, ossDirPath: string): { files: FileInfo[];
 }
 
 /**
+ * 渲染进度条
+ */
+function renderProgressBar(current: number, total: number, barLength = 30): string
+{
+    const percent = current / total;
+    const filled = Math.round(barLength * percent);
+    const empty = barLength - filled;
+    const bar = '█'.repeat(filled) + '░'.repeat(empty);
+    const percentText = (percent * 100).toFixed(0).padStart(3, ' ');
+
+    return `[${bar}] ${percentText}% (${current}/${total})`;
+}
+
+/**
  * 执行上传一系列文件
  */
 async function uploadFiles(
@@ -137,6 +161,10 @@ async function uploadFiles(
     let successCount = 0;
     let failureCount = 0;
     let uploadedCount = 0;
+    const total = files.length;
+
+    // 显示初始进度条
+    process.stdout.write(`上传进度: ${renderProgressBar(0, total)}`);
 
     for (const { localFilePath, ossFilePath } of files)
     {
@@ -148,13 +176,19 @@ async function uploadFiles(
         }
         catch (e)
         {
+            // 换行后打印错误，再重新显示进度条
+            process.stdout.write('\n');
             console.error(`文件上传失败: ${localFilePath}`, e);
             failedFiles.push(localFilePath);
             failureCount++;
         }
         uploadedCount++;
-        console.log(`上传进度: ${uploadedCount}/${files.length}`);
+        // 使用 \r 回到行首更新进度条
+        process.stdout.write(`\r上传进度: ${renderProgressBar(uploadedCount, total)}`);
     }
+
+    // 完成后换行
+    process.stdout.write('\n');
 
     return { successCount, failureCount, uploadedCount };
 }
