@@ -86,6 +86,7 @@ const SCHEMA_PATHS = [
 
 /**
  * 检测可用的 schema 路径
+ * 优先级：当前项目 -> 依赖目录
  */
 export function detectSchemaPath(projectDir: string): string
 {
