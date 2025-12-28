@@ -15,6 +15,7 @@ import {
     getFeng3dConfigTemplate,
     getTypedocConfigTemplate,
     getTestIndexTemplate,
+    getHuskyPreCommitTemplate,
     detectSchemaPath,
 } from '../templates.js';
 import { Feng3dConfig, DEFAULT_CONFIG, DEFAULT_UPDATE_CONFIG, UpdateConfig } from '../types/config.js';
@@ -30,6 +31,7 @@ export interface UpdateOptions {
     typedoc?: boolean;
     test?: boolean;
     deps?: boolean;
+    husky?: boolean;
     all?: boolean;
 }
 
@@ -173,7 +175,7 @@ async function loadProjectConfig(projectDir: string): Promise<Feng3dConfig>
 function hasAnyUpdateOption(options: UpdateOptions): boolean
 {
     return !!(options.config || options.eslint || options.gitignore || options.cursorrules ||
-              options.publish || options.pages || options.typedoc || options.test || options.deps);
+              options.publish || options.pages || options.typedoc || options.test || options.deps || options.husky);
 }
 
 /**
@@ -201,6 +203,7 @@ function mergeUpdateOptions(cliOptions: UpdateOptions, configUpdate: UpdateConfi
             typedoc: cliOptions.typedoc || false,
             test: cliOptions.test || false,
             deps: cliOptions.deps || false,
+            husky: cliOptions.husky || false,
         };
     }
 
@@ -354,6 +357,14 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     {
         await updateDependencies(projectDir, config);
         console.log(chalk.gray('  更新: package.json devDependencies'));
+    }
+
+    // 更新 husky pre-commit hook
+    if (updateConfig.husky)
+    {
+        await fs.ensureDir(path.join(projectDir, '.husky'));
+        await fs.writeFile(path.join(projectDir, '.husky/pre-commit'), getHuskyPreCommitTemplate());
+        console.log(chalk.gray('  更新: .husky/pre-commit'));
     }
 
     // 同步 .gitignore，检查自动生成的文件是否被修改

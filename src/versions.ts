@@ -26,6 +26,10 @@ export const VERSIONS = {
 
     // 文档
     typedoc: '^0.28.4',
+
+    // Git hooks
+    husky: '^9.1.7',
+    'lint-staged': '^15.2.10',
 } as const;
 
 /**
@@ -65,6 +69,10 @@ export function getDevDependencies(options: {
     {
         deps.typedoc = VERSIONS.typedoc;
     }
+
+    // 默认包含 husky 和 lint-staged
+    deps.husky = VERSIONS.husky;
+    deps['lint-staged'] = VERSIONS['lint-staged'];
 
     return deps;
 }

@@ -31,7 +31,8 @@
         "pages": true,
         "typedoc": true,
         "test": true,
-        "deps": true
+        "deps": true,
+        "husky": true
     }
 }
 

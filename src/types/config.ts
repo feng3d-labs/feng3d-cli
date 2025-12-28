@@ -76,6 +76,8 @@ export interface UpdateConfig {
     test?: boolean;
     /** 是否更新依赖版本 */
     deps?: boolean;
+    /** 是否更新 husky pre-commit hook */
+    husky?: boolean;
 }
 
 /**
@@ -111,6 +113,7 @@ export const DEFAULT_UPDATE_CONFIG: UpdateConfig = {
     typedoc: true,
     test: true,
     deps: true,
+    husky: true,
 };
 
 /**
