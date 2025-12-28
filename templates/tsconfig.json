@@ -8,9 +8,6 @@
         "declaration": true,
         "declarationMap": true,
         "outDir": "lib",
-        "strict": true,
-        "noImplicitAny": true,
-        "strictNullChecks": true,
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "forceConsistentCasingInFileNames": true,
@@ -21,4 +18,3 @@
     "include": ["src/**/*.ts"],
     "exclude": ["node_modules", "dist", "lib", "public"]
 }
-
