@@ -1,7 +1,12 @@
-# 合并请求 CI - 运行单元测试
-name: Pull Request CI
+# CI - 运行单元测试
+# 在合并到主分支或在主分支提交代码时执行
+name: CI
 
 on:
+  push:
+    branches:
+      - master
+      - main
   pull_request:
     branches:
       - master
