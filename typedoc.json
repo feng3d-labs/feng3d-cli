@@ -1,0 +1,10 @@
+{
+    "name": "feng3d-cli",
+    "$schema": "https://typedoc.org/schema.json",
+    "entryPoints": [
+        "src/index.ts"
+    ],
+    "sourceLinkTemplate": "https://github.com/feng3d-labs/feng3d-cli/tree/master/{path}#L{line}",
+    "out": "public"
+}
+

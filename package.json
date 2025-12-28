@@ -2,7 +2,7 @@
     "name": "feng3d-cli",
     "version": "0.0.3",
     "description": "feng3d 项目通用标准，包含代码规范、配置模板和 CLI 工具",
-    "homepage": "https://github.com/feng3d-labs/feng3d-cli",
+    "homepage": "https://feng3d.com/feng3d-cli/",
     "author": "feng",
     "license": "MIT",
     "type": "module",
@@ -22,13 +22,19 @@
         }
     },
     "scripts": {
+        "clean": "rimraf \"{lib,dist,public}\"",
         "build": "tsc",
         "dev": "tsc -w",
         "test": "vitest run",
         "test:watch": "vitest",
+        "types": "tsc",
+        "watch": "tsc -w",
         "lint": "eslint . --ext .js,.ts --max-warnings 0",
         "lintfix": "npm run lint -- --fix",
+        "docs": "typedoc && node -e \"require('fs').cpSync('schemas', 'public/schemas', {recursive: true})\"",
+        "upload_oss": "npm run build && npm run docs && node dist/cli.js oss_upload_dir",
         "update-rules": "npm run build && node dist/cli.js update --all",
+        "release": "npm run clean && npm run lint && npm run build && npm run docs && npm publish",
         "prepublishOnly": "npm run lint && npm test && npm run build",
         "publish:manual": "npm publish"
     },
