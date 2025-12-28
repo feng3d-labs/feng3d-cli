@@ -80,6 +80,8 @@ export interface UpdateConfig {
     deps?: boolean;
     /** 是否更新 husky pre-commit hook */
     husky?: boolean;
+    /** 是否更新 LICENSE 文件 */
+    license?: boolean;
 }
 
 /**
@@ -117,6 +119,7 @@ export const DEFAULT_UPDATE_CONFIG: UpdateConfig = {
     test: true,
     deps: true,
     husky: true,
+    license: true,
 };
 
 /**

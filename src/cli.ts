@@ -54,6 +54,7 @@ program
     .option('--test', '仅更新 test/_.test.ts')
     .option('--deps', '仅更新依赖版本')
     .option('--husky', '仅更新 husky pre-commit hook')
+    .option('--license', '仅更新 LICENSE 文件')
     .option('--all', '更新所有配置')
     .action(async (options) =>
     {

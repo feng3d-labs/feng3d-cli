@@ -19,6 +19,7 @@ import {
     getTypedocConfigTemplate,
     getTestIndexTemplate,
     getHuskyPreCommitTemplate,
+    getLicenseTemplate,
     detectSchemaPath,
 } from '../templates.js';
 import { Feng3dConfig, DEFAULT_CONFIG, DEFAULT_UPDATE_CONFIG, UpdateConfig } from '../types/config.js';
@@ -36,6 +37,7 @@ export interface UpdateOptions {
     test?: boolean;
     deps?: boolean;
     husky?: boolean;
+    license?: boolean;
     all?: boolean;
 }
 
@@ -181,7 +183,7 @@ function hasAnyUpdateOption(options: UpdateOptions): boolean
 {
     return !!(options.config || options.eslint || options.gitignore || options.cursorrules ||
               options.publish || options.pages || options.pullRequest || options.typedoc ||
-              options.test || options.deps || options.husky);
+              options.test || options.deps || options.husky || options.license);
 }
 
 /**
@@ -211,6 +213,7 @@ function mergeUpdateOptions(cliOptions: UpdateOptions, configUpdate: UpdateConfi
             test: cliOptions.test || false,
             deps: cliOptions.deps || false,
             husky: cliOptions.husky || false,
+            license: cliOptions.license || false,
         };
     }
 
@@ -383,6 +386,22 @@ export async function updateProject(options: UpdateOptions): Promise<void>
 
         // 更新 package.json 添加 husky 配置
         await updateHuskyConfig(projectDir);
+    }
+
+    // 更新 LICENSE 文件（仅在不存在时创建）
+    if (updateConfig.license)
+    {
+        const licensePath = path.join(projectDir, 'LICENSE');
+
+        if (!await fs.pathExists(licensePath))
+        {
+            await fs.writeFile(licensePath, getLicenseTemplate());
+            console.log(chalk.gray('  创建: LICENSE'));
+        }
+        else
+        {
+            console.log(chalk.gray('  跳过: LICENSE（已存在）'));
+        }
     }
 
     // 同步 .gitignore，检查自动生成的文件是否被修改

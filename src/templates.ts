@@ -119,6 +119,17 @@ export function getHuskyPreCommitTemplate(): string
 }
 
 /**
+ * 获取 LICENSE 模板内容
+ */
+export function getLicenseTemplate(ctx: { year?: number } = {}): string
+{
+    const year = ctx.year || new Date().getFullYear();
+    const template = fs.readFileSync(path.join(TEMPLATES_DIR, 'LICENSE'), 'utf-8');
+
+    return template.replace('{{year}}', String(year));
+}
+
+/**
  * 可能的 schema 路径列表（按优先级排序）
  */
 const SCHEMA_PATHS = [

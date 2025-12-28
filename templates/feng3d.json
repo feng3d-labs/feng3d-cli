@@ -33,7 +33,8 @@
         "typedoc": true,
         "test": true,
         "deps": true,
-        "husky": true
+        "husky": true,
+        "license": true
     }
 }
 
