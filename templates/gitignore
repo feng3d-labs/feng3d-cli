@@ -22,3 +22,5 @@ test/_.test.ts
 .vscode/settings.json
 tsconfig.json
 vite.config.js
+scripts/prepublish.js
+scripts/postpublish.js

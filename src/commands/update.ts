@@ -23,6 +23,8 @@ import {
     getVscodeSettingsTemplate,
     getTsconfigTemplateString,
     getViteConfigTemplate,
+    getPrepublishScriptTemplate,
+    getPostpublishScriptTemplate,
     detectSchemaPath,
 } from '../templates.js';
 import { Feng3dConfig, DEFAULT_CONFIG, DEFAULT_UPDATE_CONFIG, UpdateConfig } from '../types/config.js';
@@ -71,6 +73,8 @@ const AUTO_GENERATED_FILES: Array<{
     { path: '.vscode/settings.json', getTemplate: () => getVscodeSettingsTemplate() },
     { path: 'tsconfig.json', getTemplate: () => getTsconfigTemplateString() },
     { path: 'vite.config.js', getTemplate: () => getViteConfigTemplate() },
+    { path: 'scripts/prepublish.js', getTemplate: () => getPrepublishScriptTemplate() },
+    { path: 'scripts/postpublish.js', getTemplate: () => getPostpublishScriptTemplate() },
 ];
 
 /**
@@ -461,6 +465,25 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         }
     }
 
+    // 更新发布脚本（仅在不存在时创建，不添加到忽略列表）
+    const scriptsDir = path.join(projectDir, 'scripts');
+    const prepublishPath = path.join(scriptsDir, 'prepublish.js');
+    const postpublishPath = path.join(scriptsDir, 'postpublish.js');
+
+    if (!await fs.pathExists(prepublishPath))
+    {
+        await fs.ensureDir(scriptsDir);
+        await fs.writeFile(prepublishPath, getPrepublishScriptTemplate());
+        console.log(chalk.gray('  创建: scripts/prepublish.js'));
+    }
+
+    if (!await fs.pathExists(postpublishPath))
+    {
+        await fs.ensureDir(scriptsDir);
+        await fs.writeFile(postpublishPath, getPostpublishScriptTemplate());
+        console.log(chalk.gray('  创建: scripts/postpublish.js'));
+    }
+
     // 同步 .gitignore，检查自动生成的文件是否被修改
     await syncGitignoreForModifiedFiles(projectDir, templateContext, name);
 }
@@ -533,14 +556,15 @@ async function updateDependencies(projectDir: string, config: Feng3dConfig): Pro
     }
 
     const standardScripts: Record<string, string> = {
-        clean: 'rimraf "{lib,dist,public}"',
-        build: 'vite build',
+        clean: 'rimraf lib dist public',
+        build: 'vite build && tsc',
         lint: 'eslint . --ext .js,.ts --max-warnings 0',
         lintfix: 'npm run lint -- --fix',
         docs: 'typedoc',
         upload_oss: 'npm run docs && npx feng3d-cli oss_upload_dir',
         update: 'npx feng3d-cli update && npm install',
-        postinstall: 'npx feng3d-cli update || exit 0',
+        prepublishOnly: 'node scripts/prepublish.js',
+        postpublish: 'node scripts/postpublish.js',
     };
 
     for (const [key, value] of Object.entries(standardScripts))

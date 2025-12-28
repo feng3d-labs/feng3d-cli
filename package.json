@@ -20,21 +20,19 @@
   "scripts": {
     "clean": "rimraf lib dist public",
     "build": "vite build && tsc",
-    "dev": "vite build --watch",
+    "watch": "vite build --watch",
     "test": "vitest run",
     "test:watch": "vitest",
-    "types": "tsc",
-    "watch": "vite build --watch",
     "lint": "eslint . --ext .js,.ts --max-warnings 0",
     "lintfix": "npm run lint -- --fix",
     "docs": "typedoc",
     "upload_oss": "npm run build && npm run docs && node bin/cli.js oss_upload_dir",
+    "postinstall": "npm run build && node bin/cli.js update || exit 0",
     "update": "npm run build && node bin/cli.js update && npm install",
-    "release": "npm run clean && npm run lint && npm run build && npm run docs && npm publish",
-    "prepublishOnly": "npm run lint && npm test && npm run build",
-    "publish:manual": "npm publish",
-    "prepare": "husky",
-    "postinstall": "npm run build && node bin/cli.js update || exit 0"
+    "prepublishOnly": "node scripts/prepublish.js",
+    "release": "npm run clean && npm run lint && npm test && npm run build && npm run docs && npm publish",
+    "postpublish": "node scripts/postpublish.js",
+    "prepare": "husky"
   },
   "publishConfig": {
     "access": "public"

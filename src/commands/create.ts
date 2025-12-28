@@ -13,6 +13,8 @@ import {
     getTypedocConfig,
     getPublishWorkflowTemplate,
     getFeng3dConfigTemplate,
+    getPrepublishScriptTemplate,
+    getPostpublishScriptTemplate,
 } from '../templates.js';
 import { createEslintConfigFile } from './update.js';
 
@@ -96,6 +98,13 @@ export async function createProject(name: string, options: CreateOptions): Promi
     await fs.writeFile(path.join(projectDir, '.github/workflows/publish.yml'), getPublishWorkflowTemplate());
     console.log(chalk.gray('  创建: .github/workflows/publish.yml'));
 
+    // 创建 scripts 目录和发布脚本
+    await fs.ensureDir(path.join(projectDir, 'scripts'));
+    await fs.writeFile(path.join(projectDir, 'scripts/prepublish.js'), getPrepublishScriptTemplate());
+    await fs.writeFile(path.join(projectDir, 'scripts/postpublish.js'), getPostpublishScriptTemplate());
+    console.log(chalk.gray('  创建: scripts/prepublish.js'));
+    console.log(chalk.gray('  创建: scripts/postpublish.js'));
+
     // 创建 feng3d.json 配置文件
     await fs.writeJson(path.join(projectDir, 'feng3d.json'), getFeng3dConfigTemplate({ name }), { spaces: 4 });
     console.log(chalk.gray('  创建: feng3d.json'));
@@ -108,14 +117,14 @@ function createPackageJson(name: string, options: CreateOptions): object
 {
     const scripts: Record<string, string> = {
         dev: 'cd examples && npm run dev',
-        clean: 'rimraf "{lib,dist,public}"',
-        build: 'vite build',
+        clean: 'rimraf lib dist public',
+        build: 'vite build && tsc',
         types: 'tsc',
         watch: 'tsc -w',
         lint: 'eslint . --ext .js,.ts --max-warnings 0',
         lintfix: 'npm run lint -- --fix',
         docs: 'typedoc',
-        release: 'npm run clean && npm run lint && npm run build && npm run docs && npm run types && npm publish',
+        release: 'npm run clean && npm run lint && npm test && npm run build && npm run docs && npm publish',
         prepublishOnly: 'node scripts/prepublish.js',
         postpublish: 'node scripts/postpublish.js',
     };

@@ -143,6 +143,22 @@ export function getVscodeSettingsTemplate(): string
 }
 
 /**
+ * 获取 scripts/prepublish.js 模板内容
+ */
+export function getPrepublishScriptTemplate(): string
+{
+    return fs.readFileSync(path.join(TEMPLATES_DIR, 'scripts/prepublish.js'), 'utf-8');
+}
+
+/**
+ * 获取 scripts/postpublish.js 模板内容
+ */
+export function getPostpublishScriptTemplate(): string
+{
+    return fs.readFileSync(path.join(TEMPLATES_DIR, 'scripts/postpublish.js'), 'utf-8');
+}
+
+/**
  * 可能的 schema 路径列表（按优先级排序）
  */
 const SCHEMA_PATHS = [

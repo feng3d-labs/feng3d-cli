@@ -58,17 +58,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build
-        run: npm run build
-
-      - name: Run lint
-        run: npm run lint
-
       - name: Run tests
         run: npm test
 
-      - name: Publish to NPM
-        run: npm publish
+      - name: Release to NPM
+        run: npm run release
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

@@ -20,3 +20,5 @@ typedoc.json
 test/_.test.ts
 .husky/pre-commit
 .vscode/settings.json
+scripts/prepublish.js
+scripts/postpublish.js
