@@ -33,7 +33,7 @@
         "lintfix": "npm run lint -- --fix",
         "docs": "typedoc",
         "upload_oss": "npm run build && npm run docs && node dist/cli.js oss_upload_dir",
-        "update-rules": "npm run build && node dist/cli.js update",
+        "update": "npm run build && node dist/cli.js update",
         "release": "npm run clean && npm run lint && npm run build && npm run docs && npm publish",
         "prepublishOnly": "npm run lint && npm test && npm run build",
         "publish:manual": "npm publish"
