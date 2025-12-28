@@ -1,6 +1,6 @@
 {
     "name": "feng3d-cli",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "feng3d 项目通用标准，包含代码规范、配置模板和 CLI 工具",
     "homepage": "https://github.com/feng3d-labs/feng3d-cli",
     "author": "feng",
