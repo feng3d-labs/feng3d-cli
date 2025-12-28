@@ -46,11 +46,11 @@ export function getTsconfigTemplateString(): string
 }
 
 /**
- * 获取 vitest.config.ts 模板内容
+ * 获取 vite.config.js 模板内容
  */
-export function getVitestConfigTemplate(): string
+export function getViteConfigTemplate(): string
 {
-    return fs.readFileSync(path.join(TEMPLATES_DIR, 'vitest.config.ts'), 'utf-8');
+    return fs.readFileSync(path.join(TEMPLATES_DIR, 'vite.config.js'), 'utf-8');
 }
 
 /**
@@ -188,14 +188,3 @@ export function getFeng3dConfigTemplate(options: { name: string; schemaPath?: st
     return config;
 }
 
-// 为了向后兼容，保留原有的变量导出
-/** @deprecated 请使用 getGitignoreTemplate() 函数 */
-export const gitignoreTemplate = getGitignoreTemplate();
-/** @deprecated 请使用 getCursorrrulesTemplate() 函数 */
-export const cursorrrulesTemplate = getCursorrrulesTemplate();
-/** @deprecated 请使用 getTsconfigTemplate() 函数 */
-export const tsconfigTemplate = getTsconfigTemplate();
-/** @deprecated 请使用 getVitestConfigTemplate() 函数 */
-export const vitestConfigTemplate = getVitestConfigTemplate();
-/** @deprecated 请使用 getTypedocConfig() 函数 */
-export const createTypedocConfig = getTypedocConfig;

@@ -10,7 +10,6 @@ import {
     getGitignoreTemplate,
     getCursorrrulesTemplate,
     getTsconfigTemplate,
-    getVitestConfigTemplate,
     getTypedocConfig,
     getPublishWorkflowTemplate,
     getFeng3dConfigTemplate,
@@ -63,13 +62,6 @@ export async function createProject(name: string, options: CreateOptions): Promi
     // 创建 eslint.config.js
     await createEslintConfigFile(projectDir);
     console.log(chalk.gray('  创建: eslint.config.js'));
-
-    // 创建 vitest.config.ts
-    if (options.vitest !== false)
-    {
-        await fs.writeFile(path.join(projectDir, 'vitest.config.ts'), getVitestConfigTemplate());
-        console.log(chalk.gray('  创建: vitest.config.ts'));
-    }
 
     // 创建 typedoc.json
     const typedocConfig = getTypedocConfig({ repoName: name });

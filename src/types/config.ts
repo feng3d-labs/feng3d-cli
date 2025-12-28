@@ -86,6 +86,8 @@ export interface UpdateConfig {
     vscode?: boolean;
     /** 是否更新 tsconfig.json */
     tsconfig?: boolean;
+    /** 是否更新 vite.config.js */
+    vite?: boolean;
 }
 
 /**
@@ -126,6 +128,7 @@ export const DEFAULT_UPDATE_CONFIG: UpdateConfig = {
     license: true,
     vscode: true,
     tsconfig: true,
+    vite: true,
 };
 
 /**

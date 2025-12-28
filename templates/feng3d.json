@@ -36,7 +36,8 @@
         "husky": true,
         "license": true,
         "vscode": true,
-        "tsconfig": true
+        "tsconfig": true,
+        "vite": true
     }
 }
 

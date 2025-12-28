@@ -22,6 +22,7 @@ import {
     getLicenseTemplate,
     getVscodeSettingsTemplate,
     getTsconfigTemplateString,
+    getViteConfigTemplate,
     detectSchemaPath,
 } from '../templates.js';
 import { Feng3dConfig, DEFAULT_CONFIG, DEFAULT_UPDATE_CONFIG, UpdateConfig } from '../types/config.js';
@@ -42,6 +43,7 @@ export interface UpdateOptions {
     license?: boolean;
     vscode?: boolean;
     tsconfig?: boolean;
+    vite?: boolean;
     all?: boolean;
 }
 
@@ -68,6 +70,7 @@ const AUTO_GENERATED_FILES: Array<{
     { path: '.husky/pre-commit', getTemplate: () => getHuskyPreCommitTemplate() },
     { path: '.vscode/settings.json', getTemplate: () => getVscodeSettingsTemplate() },
     { path: 'tsconfig.json', getTemplate: () => getTsconfigTemplateString() },
+    { path: 'vite.config.js', getTemplate: () => getViteConfigTemplate() },
 ];
 
 /**
@@ -438,6 +441,23 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         }
     }
 
+    // 更新 vite.config.js（仅在忽略列表中时覆盖）
+    if (updateConfig.vite)
+    {
+        const viteConfigPath = path.join(projectDir, 'vite.config.js');
+        const isIgnored = await isFileInGitignore(projectDir, 'vite.config.js');
+
+        if (isIgnored || !await fs.pathExists(viteConfigPath))
+        {
+            await fs.writeFile(viteConfigPath, getViteConfigTemplate());
+            console.log(chalk.gray(isIgnored ? '  覆盖: vite.config.js（在忽略列表中）' : '  创建: vite.config.js'));
+        }
+        else
+        {
+            console.log(chalk.gray('  跳过: vite.config.js（已存在且不在忽略列表中）'));
+        }
+    }
+
     // 同步 .gitignore，检查自动生成的文件是否被修改
     await syncGitignoreForModifiedFiles(projectDir, templateContext);
 }
@@ -510,10 +530,12 @@ async function updateDependencies(projectDir: string, config: Feng3dConfig): Pro
     }
 
     const standardScripts: Record<string, string> = {
+        clean: 'rimraf "{lib,dist,public}"',
+        build: 'vite build',
         lint: 'eslint . --ext .js,.ts --max-warnings 0',
         lintfix: 'npm run lint -- --fix',
         docs: 'typedoc',
-        upload_oss: 'npm run docs && feng3d-cli oss_upload_dir',
+        upload_oss: 'npm run docs && npx feng3d-cli oss_upload_dir',
         update: 'npx feng3d-cli update && npm install',
         postinstall: 'npx feng3d-cli update || exit 0',
     };
