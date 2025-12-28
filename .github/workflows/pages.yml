@@ -6,6 +6,8 @@ on:
     branches:
       - master
       - main
+  release:
+    types: [published]  # 发布新版本时触发
   workflow_dispatch:  # 支持手动触发
 
 # 设置 GITHUB_TOKEN 的权限
