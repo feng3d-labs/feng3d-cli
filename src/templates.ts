@@ -77,14 +77,47 @@ export function getPublishWorkflowTemplate(): string
 }
 
 /**
+ * 可能的 schema 路径列表（按优先级排序）
+ */
+const SCHEMA_PATHS = [
+    './schemas/feng3d.schema.json',
+    './node_modules/feng3d-cli/schemas/feng3d.schema.json',
+];
+
+/**
+ * 检测可用的 schema 路径
+ */
+export function detectSchemaPath(projectDir: string): string
+{
+    for (const schemaPath of SCHEMA_PATHS)
+    {
+        const fullPath = path.join(projectDir, schemaPath);
+        if (fs.existsSync(fullPath))
+        {
+            return schemaPath;
+        }
+    }
+
+    // 默认返回 node_modules 路径
+    return SCHEMA_PATHS[1];
+}
+
+/**
  * 获取 feng3d.json 模板内容
  */
-export function getFeng3dConfigTemplate(options: { name: string }): object
+export function getFeng3dConfigTemplate(options: { name: string; schemaPath?: string }): object
 {
     const templateContent = fs.readFileSync(path.join(TEMPLATES_DIR, 'feng3d.json'), 'utf-8');
     const content = templateContent.replace(/\{\{name\}\}/g, options.name);
+    const config = JSON.parse(content);
 
-    return JSON.parse(content);
+    // 如果提供了 schemaPath，则使用它
+    if (options.schemaPath)
+    {
+        config.$schema = options.schemaPath;
+    }
+
+    return config;
 }
 
 // 为了向后兼容，保留原有的变量导出

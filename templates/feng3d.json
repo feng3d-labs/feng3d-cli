@@ -1,5 +1,5 @@
 {
-    "$schema": "https://feng3d.com/schemas/feng3dconfig.schema.json",
+    "$schema": "./node_modules/feng3d-cli/schemas/feng3d.schema.json",
     "name": "{{name}}",
     "eslint": {
         "enabled": true,

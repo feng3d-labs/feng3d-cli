@@ -12,6 +12,7 @@ import {
     getEslintConfigTemplate,
     getPublishWorkflowTemplate,
     getFeng3dConfigTemplate,
+    detectSchemaPath,
 } from '../templates.js';
 import { Feng3dConfig, DEFAULT_CONFIG } from '../types/config.js';
 
@@ -41,6 +42,9 @@ async function loadProjectConfig(projectDir: string): Promise<Feng3dConfig>
 {
     const configPath = path.join(projectDir, 'feng3d.json');
 
+    // 检测可用的 schema 路径
+    const schemaPath = detectSchemaPath(projectDir);
+
     if (!await fs.pathExists(configPath))
     {
         // 从 package.json 读取项目名称
@@ -48,8 +52,8 @@ async function loadProjectConfig(projectDir: string): Promise<Feng3dConfig>
         const packageJson = await fs.readJson(packageJsonPath);
         const name = packageJson.name || path.basename(projectDir);
 
-        // 自动创建 feng3d.json
-        const configTemplate = getFeng3dConfigTemplate({ name });
+        // 自动创建 feng3d.json，使用检测到的 schema 路径
+        const configTemplate = getFeng3dConfigTemplate({ name, schemaPath });
         await fs.writeJson(configPath, configTemplate, { spaces: 4 });
         console.log(chalk.gray('  创建: feng3d.json'));
 
@@ -60,7 +64,17 @@ async function loadProjectConfig(projectDir: string): Promise<Feng3dConfig>
     {
         const configData = await fs.readJson(configPath);
 
-        console.log(chalk.gray('  加载配置: feng3d.json'));
+        // 更新 $schema 路径（如果需要）
+        if (configData.$schema !== schemaPath)
+        {
+            configData.$schema = schemaPath;
+            await fs.writeJson(configPath, configData, { spaces: 4 });
+            console.log(chalk.gray(`  更新: feng3d.json $schema -> ${schemaPath}`));
+        }
+        else
+        {
+            console.log(chalk.gray('  加载配置: feng3d.json'));
+        }
 
         return { ...DEFAULT_CONFIG, ...configData };
     }

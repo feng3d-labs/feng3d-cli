@@ -1,0 +1,114 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "feng3d.schema.json",
+    "title": "feng3d 项目配置",
+    "description": "feng3d 项目配置文件，用于自定义项目规范和 CLI 行为",
+    "type": "object",
+    "properties": {
+        "$schema": {
+            "type": "string",
+            "description": "JSON Schema 引用"
+        },
+        "name": {
+            "type": "string",
+            "description": "项目名称"
+        },
+        "eslint": {
+            "type": "object",
+            "description": "ESLint 配置选项",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "是否启用 ESLint",
+                    "default": true
+                },
+                "ignores": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "额外需要忽略的目录",
+                    "default": []
+                },
+                "rules": {
+                    "type": "object",
+                    "description": "额外的规则覆盖",
+                    "additionalProperties": true,
+                    "default": {}
+                }
+            },
+            "additionalProperties": false
+        },
+        "vitest": {
+            "type": "object",
+            "description": "Vitest 测试配置选项",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "是否启用 vitest",
+                    "default": true
+                },
+                "testTimeout": {
+                    "type": "number",
+                    "description": "测试超时时间（毫秒，0 表示无限制）",
+                    "default": 0,
+                    "minimum": 0
+                }
+            },
+            "additionalProperties": false
+        },
+        "typedoc": {
+            "type": "object",
+            "description": "TypeDoc 文档配置选项",
+            "properties": {
+                "enabled": {
+                    "type": "boolean",
+                    "description": "是否启用 typedoc",
+                    "default": true
+                },
+                "outDir": {
+                    "type": "string",
+                    "description": "文档输出目录",
+                    "default": "public/docs"
+                }
+            },
+            "additionalProperties": false
+        },
+        "oss": {
+            "type": "object",
+            "description": "OSS 上传配置",
+            "properties": {
+                "localDir": {
+                    "type": "string",
+                    "description": "本地目录",
+                    "default": "./public"
+                },
+                "ossDir": {
+                    "type": "string",
+                    "description": "OSS 目录（默认使用 package.json 的 name）",
+                    "default": ""
+                }
+            },
+            "additionalProperties": false
+        },
+        "templates": {
+            "type": "object",
+            "description": "项目模板选项",
+            "properties": {
+                "examples": {
+                    "type": "boolean",
+                    "description": "是否创建示例目录",
+                    "default": true
+                },
+                "test": {
+                    "type": "boolean",
+                    "description": "是否创建测试目录",
+                    "default": true
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}
+
