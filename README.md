@@ -80,21 +80,6 @@ const deps = getDevDependencies({
 });
 ```
 
-### 使用 ESLint 配置
-
-在项目的 `eslint.config.js` 中：
-
-```javascript
-import { eslintRules } from 'feng3d-cli/eslint';
-
-export default [
-    // ... 其他配置
-    {
-        rules: eslintRules,
-    },
-];
-```
-
 ### 使用模板
 
 ```typescript

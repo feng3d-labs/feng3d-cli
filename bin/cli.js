@@ -7,9 +7,7 @@
 import fs from 'fs';
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { createProject } from './commands/create.js';
-import { updateProject } from './commands/update.js';
-import { ossUploadDir } from './commands/oss.js';
+import { createProject, updateProject, ossUploadDir } from '../dist/index.js';
 
 const program = new Command();
 
@@ -24,7 +22,7 @@ program
     .option('-d, --directory <dir>', '项目目录', '.')
     .option('--no-examples', '不创建示例目录')
     .option('--no-vitest', '不包含 vitest 测试配置')
-    .action(async (name: string, options) =>
+    .action(async (name, options) =>
     {
         console.log(chalk.blue(`\n🚀 创建项目: ${name}\n`));
         try
@@ -135,4 +133,3 @@ program
     });
 
 program.parse();
-

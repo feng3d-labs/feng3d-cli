@@ -9,16 +9,12 @@
   "main": "./dist/index.js",
   "types": "./lib/index.d.ts",
   "bin": {
-    "feng3d-cli": "./dist/cli.js"
+    "feng3d-cli": "./bin/cli.js"
   },
   "exports": {
     ".": {
       "types": "./lib/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./eslint": {
-      "types": "./lib/eslint.d.ts",
-      "import": "./dist/eslint.js"
     }
   },
   "scripts": {
@@ -32,13 +28,13 @@
     "lint": "eslint . --ext .js,.ts --max-warnings 0",
     "lintfix": "npm run lint -- --fix",
     "docs": "typedoc",
-    "upload_oss": "npm run build && npm run docs && node dist/cli.js oss_upload_dir",
-    "update": "npm run build && node dist/cli.js update && npm install",
+    "upload_oss": "npm run build && npm run docs && node bin/cli.js oss_upload_dir",
+    "update": "npm run build && node bin/cli.js update && npm install",
     "release": "npm run clean && npm run lint && npm run build && npm run docs && npm publish",
     "prepublishOnly": "npm run lint && npm test && npm run build",
     "publish:manual": "npm publish",
     "prepare": "husky",
-    "postinstall": "npm run build && node dist/cli.js update || exit 0"
+    "postinstall": "npm run build && node bin/cli.js update || exit 0"
   },
   "publishConfig": {
     "access": "public"
@@ -48,6 +44,7 @@
     "url": "https://github.com/feng3d-labs/feng3d-cli.git"
   },
   "files": [
+    "bin",
     "dist",
     "lib",
     "templates",

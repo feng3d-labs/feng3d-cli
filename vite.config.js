@@ -15,13 +15,9 @@ export default defineConfig({
     build: {
         target: 'node18',
         lib: {
-            entry: {
-                index: resolve(__dirname, 'src/index.ts'),
-                cli: resolve(__dirname, 'src/cli.ts'),
-                eslint: resolve(__dirname, 'src/eslint.ts'),
-            },
+            entry: resolve(__dirname, 'src/index.ts'),
             formats: ['es'],
-            fileName: (format, entryName) => `${entryName}.js`,
+            fileName: () => 'index.js',
         },
         minify: false,
         sourcemap: true,
