@@ -28,7 +28,7 @@
         "test:watch": "vitest",
         "lint": "eslint . --ext .js,.ts --max-warnings 0",
         "lintfix": "npm run lint -- --fix",
-        "update-rules": "node dist/cli.js update --all",
+        "update-rules": "npm run build && node dist/cli.js update --all",
         "prepublishOnly": "npm run lint && npm test && npm run build",
         "publish:manual": "npm publish"
     },
