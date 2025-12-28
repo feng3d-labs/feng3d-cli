@@ -82,6 +82,8 @@ export interface UpdateConfig {
     husky?: boolean;
     /** 是否更新 LICENSE 文件 */
     license?: boolean;
+    /** 是否更新 .vscode/settings.json */
+    vscode?: boolean;
 }
 
 /**
@@ -120,6 +122,7 @@ export const DEFAULT_UPDATE_CONFIG: UpdateConfig = {
     deps: true,
     husky: true,
     license: true,
+    vscode: true,
 };
 
 /**

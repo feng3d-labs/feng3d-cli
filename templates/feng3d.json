@@ -34,7 +34,8 @@
         "test": true,
         "deps": true,
         "husky": true,
-        "license": true
+        "license": true,
+        "vscode": true
     }
 }
 

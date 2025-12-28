@@ -130,6 +130,14 @@ export function getLicenseTemplate(ctx: { year?: number } = {}): string
 }
 
 /**
+ * 获取 .vscode/settings.json 模板内容
+ */
+export function getVscodeSettingsTemplate(): string
+{
+    return fs.readFileSync(path.join(TEMPLATES_DIR, '.vscode/settings.json'), 'utf-8');
+}
+
+/**
  * 可能的 schema 路径列表（按优先级排序）
  */
 const SCHEMA_PATHS = [

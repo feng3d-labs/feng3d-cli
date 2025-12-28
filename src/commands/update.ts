@@ -20,6 +20,7 @@ import {
     getTestIndexTemplate,
     getHuskyPreCommitTemplate,
     getLicenseTemplate,
+    getVscodeSettingsTemplate,
     detectSchemaPath,
 } from '../templates.js';
 import { Feng3dConfig, DEFAULT_CONFIG, DEFAULT_UPDATE_CONFIG, UpdateConfig } from '../types/config.js';
@@ -38,6 +39,7 @@ export interface UpdateOptions {
     deps?: boolean;
     husky?: boolean;
     license?: boolean;
+    vscode?: boolean;
     all?: boolean;
 }
 
@@ -62,6 +64,7 @@ const AUTO_GENERATED_FILES: Array<{
     { path: 'typedoc.json', getTemplate: (ctx) => getTypedocConfigTemplate({ name: ctx.name, repoName: ctx.repoName }) },
     { path: 'test/_.test.ts', getTemplate: (ctx) => getTestIndexTemplate({ name: ctx.name }) },
     { path: '.husky/pre-commit', getTemplate: () => getHuskyPreCommitTemplate() },
+    { path: '.vscode/settings.json', getTemplate: () => getVscodeSettingsTemplate() },
 ];
 
 /**
@@ -183,7 +186,7 @@ function hasAnyUpdateOption(options: UpdateOptions): boolean
 {
     return !!(options.config || options.eslint || options.gitignore || options.cursorrules ||
               options.publish || options.pages || options.pullRequest || options.typedoc ||
-              options.test || options.deps || options.husky || options.license);
+              options.test || options.deps || options.husky || options.license || options.vscode);
 }
 
 /**
@@ -214,6 +217,7 @@ function mergeUpdateOptions(cliOptions: UpdateOptions, configUpdate: UpdateConfi
             deps: cliOptions.deps || false,
             husky: cliOptions.husky || false,
             license: cliOptions.license || false,
+            vscode: cliOptions.vscode || false,
         };
     }
 
@@ -402,6 +406,14 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         {
             console.log(chalk.gray('  跳过: LICENSE（已存在）'));
         }
+    }
+
+    // 更新 .vscode/settings.json
+    if (updateConfig.vscode)
+    {
+        await fs.ensureDir(path.join(projectDir, '.vscode'));
+        await fs.writeFile(path.join(projectDir, '.vscode/settings.json'), getVscodeSettingsTemplate());
+        console.log(chalk.gray('  更新: .vscode/settings.json'));
     }
 
     // 同步 .gitignore，检查自动生成的文件是否被修改

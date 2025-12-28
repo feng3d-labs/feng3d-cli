@@ -18,3 +18,4 @@ eslint.config.js
 typedoc.json
 test/_.test.ts
 .husky/pre-commit
+.vscode/settings.json
