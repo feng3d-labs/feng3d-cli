@@ -67,7 +67,7 @@ const AUTO_GENERATED_FILES: Array<{
     { path: 'test/_.test.ts', getTemplate: (ctx) => getTestIndexTemplate({ name: ctx.name }) },
     { path: '.husky/pre-commit', getTemplate: () => getHuskyPreCommitTemplate() },
     { path: '.vscode/settings.json', getTemplate: () => getVscodeSettingsTemplate() },
-    // tsconfig.json 不在此列表中，因为它通常需要项目特定的自定义配置
+    { path: 'tsconfig.json', getTemplate: () => getTsconfigTemplateString() },
 ];
 
 /**
@@ -643,6 +643,7 @@ async function syncGitignoreForModifiedFiles(projectDir: string, _ctx: TemplateC
     }
 
     // 检查其他自动生成的文件是否在 .gitignore 中
+    // 只有当文件内容与模板一致时才添加到忽略列表
     for (const file of AUTO_GENERATED_FILES)
     {
         const escapedPath = file.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -650,7 +651,20 @@ async function syncGitignoreForModifiedFiles(projectDir: string, _ctx: TemplateC
 
         if (!regex.test(gitignoreContent))
         {
-            filesToAdd.push(file.path);
+            // 检查文件是否存在且内容与模板一致
+            const filePath = path.join(projectDir, file.path);
+
+            if (await fs.pathExists(filePath))
+            {
+                const fileContent = await fs.readFile(filePath, 'utf-8');
+                const templateContent = file.getTemplate(_ctx);
+
+                // 只有内容与模板一致时才添加到忽略列表
+                if (fileContent.trim() === templateContent.trim())
+                {
+                    filesToAdd.push(file.path);
+                }
+            }
         }
     }
 
