@@ -54,6 +54,7 @@ async function loadProjectConfig(projectDir: string): Promise<Feng3dConfig>
 
         // 自动创建 feng3d.json，使用检测到的 schema 路径
         const configTemplate = getFeng3dConfigTemplate({ name, schemaPath });
+
         await fs.writeJson(configPath, configTemplate, { spaces: 4 });
         console.log(chalk.gray('  创建: feng3d.json'));
 
@@ -95,6 +96,7 @@ export async function updateProject(options: UpdateOptions): Promise<void>
 
     // 检查是否是有效的项目目录
     const packageJsonPath = path.join(projectDir, 'package.json');
+
     if (!await fs.pathExists(packageJsonPath))
     {
         throw new Error(`${projectDir} 不是有效的项目目录（未找到 package.json）`);
@@ -109,6 +111,7 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     if (updateAll || options.gitignore)
     {
         const gitignorePath = path.join(projectDir, '.gitignore');
+
         if (!await fs.pathExists(gitignorePath))
         {
             await fs.writeFile(gitignorePath, getGitignoreTemplate());
@@ -225,6 +228,12 @@ async function isFeng3dConfigModified(projectDir: string): Promise<boolean>
 }
 
 /**
+ * 自动生成文件的注释说明
+ */
+const AUTO_GENERATED_COMMENT = `# 以下文件可由 feng3d-cli 自动生成，无需提交
+# 运行 \`feng3d-cli update\` 可重新生成`;
+
+/**
  * 同步 .gitignore，如果自动生成的文件被用户修改，则从忽略列表中移除
  */
 async function syncGitignoreForModifiedFiles(projectDir: string): Promise<void>
@@ -239,6 +248,11 @@ async function syncGitignoreForModifiedFiles(projectDir: string): Promise<void>
     let gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
     let modified = false;
 
+    // 需要添加到 .gitignore 的文件列表
+    const filesToAdd: string[] = [];
+    // 需要从 .gitignore 移除的文件列表
+    const filesToRemove: string[] = [];
+
     // 处理 feng3d.json（特殊处理，比较 JSON 内容而非字符串）
     const feng3dConfigPath = 'feng3d.json';
     const feng3dConfigFullPath = path.join(projectDir, feng3dConfigPath);
@@ -252,14 +266,12 @@ async function syncGitignoreForModifiedFiles(projectDir: string): Promise<void>
 
         if (isConfigModified && isInGitignore)
         {
-            gitignoreContent = gitignoreContent.replace(regex, '').replace(/\n\n+/g, '\n\n').trim() + '\n';
-            modified = true;
+            filesToRemove.push(feng3dConfigPath);
             console.log(chalk.yellow(`  从 .gitignore 移除: ${feng3dConfigPath}（检测到自定义修改）`));
         }
         else if (!isConfigModified && !isInGitignore)
         {
-            gitignoreContent = gitignoreContent.trim() + '\n' + feng3dConfigPath + '\n';
-            modified = true;
+            filesToAdd.push(feng3dConfigPath);
             console.log(chalk.gray(`  添加到 .gitignore: ${feng3dConfigPath}（与默认配置相同）`));
         }
     }
@@ -285,22 +297,52 @@ async function syncGitignoreForModifiedFiles(projectDir: string): Promise<void>
 
         if (isModified && isInGitignore)
         {
-            // 文件被修改，从 .gitignore 中移除
-            gitignoreContent = gitignoreContent.replace(regex, '').replace(/\n\n+/g, '\n\n').trim() + '\n';
-            modified = true;
+            filesToRemove.push(file.path);
             console.log(chalk.yellow(`  从 .gitignore 移除: ${file.path}（检测到自定义修改）`));
         }
         else if (!isModified && !isInGitignore)
         {
-            // 文件未修改但不在 .gitignore 中，添加回去
-            gitignoreContent = gitignoreContent.trim() + '\n' + file.path + '\n';
-            modified = true;
+            filesToAdd.push(file.path);
             console.log(chalk.gray(`  添加到 .gitignore: ${file.path}（与模板相同）`));
         }
     }
 
+    // 移除需要删除的文件
+    for (const filePath of filesToRemove)
+    {
+        const escapedPath = filePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`^${escapedPath}$`, 'm');
+
+        gitignoreContent = gitignoreContent.replace(regex, '');
+        modified = true;
+    }
+
+    // 添加需要添加的文件
+    if (filesToAdd.length > 0)
+    {
+        // 检查是否已有注释说明
+        const hasComment = gitignoreContent.includes('# 以下文件可由 feng3d-cli 自动生成');
+
+        if (!hasComment)
+        {
+            // 添加注释和文件
+            gitignoreContent = gitignoreContent.trim() + '\n\n' + AUTO_GENERATED_COMMENT + '\n' + filesToAdd.join('\n') + '\n';
+        }
+        else
+        {
+            // 在注释后添加文件
+            for (const filePath of filesToAdd)
+            {
+                gitignoreContent = gitignoreContent.trim() + '\n' + filePath + '\n';
+            }
+        }
+        modified = true;
+    }
+
+    // 清理多余的空行
     if (modified)
     {
+        gitignoreContent = gitignoreContent.replace(/\n\n+/g, '\n\n').trim() + '\n';
         await fs.writeFile(gitignorePath, gitignoreContent);
     }
 }

@@ -99,6 +99,7 @@ program
             {
                 const packageJson = fs.readFileSync('package.json', 'utf-8');
                 const packageJsonObj = JSON.parse(packageJson);
+
                 ossDir = packageJsonObj.name.split('/').pop();
             }
             catch

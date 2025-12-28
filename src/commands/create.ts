@@ -44,6 +44,7 @@ export async function createProject(name: string, options: CreateOptions): Promi
 
     // 创建 package.json
     const packageJson = createPackageJson(name, options);
+
     await fs.writeJson(path.join(projectDir, 'package.json'), packageJson, { spaces: 4 });
     console.log(chalk.gray('  创建: package.json'));
 
@@ -72,6 +73,7 @@ export async function createProject(name: string, options: CreateOptions): Promi
 
     // 创建 typedoc.json
     const typedocConfig = getTypedocConfig({ name: `@feng3d/${name}`, repoName: name });
+
     await fs.writeJson(path.join(projectDir, 'typedoc.json'), typedocConfig, { spaces: 4 });
     console.log(chalk.gray('  创建: typedoc.json'));
 

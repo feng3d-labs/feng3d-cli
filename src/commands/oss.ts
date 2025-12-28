@@ -50,6 +50,7 @@ export async function ossUploadDir(localDirPath: string, ossDirPath: string): Pr
     {
         const baseUrl = config.baseUrl || `https://${config.bucket}.${config.region}.aliyuncs.com`;
         const accessUrl = `${baseUrl}/${ossDirPath}/`;
+
         console.log(`\n📎 访问路径: ${accessUrl}`);
     }
 }
@@ -114,6 +115,7 @@ function collectFiles(dirPath: string, ossDirPath: string): { files: FileInfo[];
     function traverseDirectory(currentDirPath: string, currentOssPath: string): void
     {
         const items = fs.readdirSync(currentDirPath);
+
         for (const item of items)
         {
             const localFilePath = path.join(currentDirPath, item);

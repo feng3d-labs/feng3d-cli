@@ -15,7 +15,8 @@ declare module 'ali-oss' {
         };
     }
 
-    class OSS {
+    class OSS
+    {
         constructor(options: OSSOptions);
         put(name: string, file: string | Buffer): Promise<PutResult>;
     }

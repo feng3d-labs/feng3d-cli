@@ -93,6 +93,7 @@ export function detectSchemaPath(projectDir: string): string
     for (const schemaPath of SCHEMA_PATHS)
     {
         const fullPath = path.join(projectDir, schemaPath);
+
         if (fs.existsSync(fullPath))
         {
             return schemaPath;
