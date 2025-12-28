@@ -77,13 +77,14 @@ export function getPublishWorkflowTemplate(): string
 }
 
 /**
- * 获取 feng3dconfig.js 模板内容
+ * 获取 feng3d.json 模板内容
  */
-export function getFeng3dConfigTemplate(options: { name: string }): string
+export function getFeng3dConfigTemplate(options: { name: string }): object
 {
-    const templateContent = fs.readFileSync(path.join(TEMPLATES_DIR, 'feng3dconfig.js'), 'utf-8');
+    const templateContent = fs.readFileSync(path.join(TEMPLATES_DIR, 'feng3d.json'), 'utf-8');
+    const content = templateContent.replace(/\{\{name\}\}/g, options.name);
 
-    return templateContent.replace(/\{\{name\}\}/g, options.name);
+    return JSON.parse(content);
 }
 
 // 为了向后兼容，保留原有的变量导出

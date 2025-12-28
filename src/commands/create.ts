@@ -102,9 +102,9 @@ export async function createProject(name: string, options: CreateOptions): Promi
     await fs.writeFile(path.join(projectDir, '.github/workflows/publish.yml'), getPublishWorkflowTemplate());
     console.log(chalk.gray('  创建: .github/workflows/publish.yml'));
 
-    // 创建 feng3dconfig.js 配置文件
-    await fs.writeFile(path.join(projectDir, 'feng3dconfig.js'), getFeng3dConfigTemplate({ name }));
-    console.log(chalk.gray('  创建: feng3dconfig.js'));
+    // 创建 feng3d.json 配置文件
+    await fs.writeJson(path.join(projectDir, 'feng3d.json'), getFeng3dConfigTemplate({ name }), { spaces: 4 });
+    console.log(chalk.gray('  创建: feng3d.json'));
 }
 
 /**

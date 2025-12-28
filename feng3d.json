@@ -1,0 +1,26 @@
+{
+    "$schema": "https://feng3d.com/schemas/feng3dconfig.schema.json",
+    "name": "feng3d-cli",
+    "eslint": {
+        "enabled": true,
+        "ignores": [],
+        "rules": {}
+    },
+    "vitest": {
+        "enabled": true,
+        "testTimeout": 0
+    },
+    "typedoc": {
+        "enabled": true,
+        "outDir": "public/docs"
+    },
+    "oss": {
+        "localDir": "./public",
+        "ossDir": ""
+    },
+    "templates": {
+        "examples": true,
+        "test": true
+    }
+}
+

@@ -4,7 +4,6 @@
 
 import fs from 'fs-extra';
 import path from 'path';
-import { pathToFileURL } from 'url';
 import chalk from 'chalk';
 import { getDevDependencies } from '../versions.js';
 import {
@@ -35,32 +34,30 @@ const AUTO_GENERATED_FILES = [
 ];
 
 /**
- * 读取项目的 feng3dconfig.js 配置文件
+ * 读取项目的 feng3d.json 配置文件
  */
 async function loadProjectConfig(projectDir: string): Promise<Feng3dConfig>
 {
-    const configPath = path.join(projectDir, 'feng3dconfig.js');
+    const configPath = path.join(projectDir, 'feng3d.json');
 
     if (!await fs.pathExists(configPath))
     {
-        console.log(chalk.gray('  未找到 feng3dconfig.js，使用默认配置'));
+        console.log(chalk.gray('  未找到 feng3d.json，使用默认配置'));
 
         return DEFAULT_CONFIG;
     }
 
     try
     {
-        // 使用动态 import 加载 ES module 配置文件
-        const configUrl = pathToFileURL(configPath).href;
-        const configModule = await import(configUrl);
+        const configData = await fs.readJson(configPath);
 
-        console.log(chalk.gray('  加载配置: feng3dconfig.js'));
+        console.log(chalk.gray('  加载配置: feng3d.json'));
 
-        return { ...DEFAULT_CONFIG, ...configModule.default };
+        return { ...DEFAULT_CONFIG, ...configData };
     }
     catch (error)
     {
-        console.log(chalk.yellow(`  警告: 无法加载 feng3dconfig.js，使用默认配置 (${error})`));
+        console.log(chalk.yellow(`  警告: 无法加载 feng3d.json，使用默认配置 (${error})`));
 
         return DEFAULT_CONFIG;
     }
