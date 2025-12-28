@@ -63,7 +63,7 @@ const AUTO_GENERATED_FILES: Array<{
 }> = [
     { path: '.cursorrules', getTemplate: () => getCursorrrulesTemplate() },
     { path: 'eslint.config.js', getTemplate: () => getEslintConfigTemplate() },
-    { path: 'typedoc.json', getTemplate: (ctx) => getTypedocConfigTemplate({ name: ctx.name, repoName: ctx.repoName }) },
+    { path: 'typedoc.json', getTemplate: (ctx) => getTypedocConfigTemplate({ repoName: ctx.repoName }) },
     { path: 'test/_.test.ts', getTemplate: (ctx) => getTestIndexTemplate({ name: ctx.name }) },
     { path: '.husky/pre-commit', getTemplate: () => getHuskyPreCommitTemplate() },
     { path: '.vscode/settings.json', getTemplate: () => getVscodeSettingsTemplate() },
@@ -329,7 +329,7 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     {
         if (config.typedoc?.enabled !== false)
         {
-            const typedocContent = getTypedocConfigTemplate({ name, repoName });
+            const typedocContent = getTypedocConfigTemplate({ repoName });
 
             await fs.writeFile(path.join(projectDir, 'typedoc.json'), typedocContent);
             console.log(chalk.gray('  更新: typedoc.json'));
