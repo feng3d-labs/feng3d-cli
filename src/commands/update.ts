@@ -39,11 +39,19 @@ export async function updateProject(options: UpdateOptions): Promise<void>
 
     const updateAll = options.all || (!options.eslint && !options.gitignore && !options.cursorrules && !options.workflow && !options.deps);
 
-    // 更新 .gitignore
+    // 更新 .gitignore（仅在文件不存在时创建）
     if (updateAll || options.gitignore)
     {
-        await fs.writeFile(path.join(projectDir, '.gitignore'), getGitignoreTemplate());
-        console.log(chalk.gray('  更新: .gitignore'));
+        const gitignorePath = path.join(projectDir, '.gitignore');
+        if (!await fs.pathExists(gitignorePath))
+        {
+            await fs.writeFile(gitignorePath, getGitignoreTemplate());
+            console.log(chalk.gray('  创建: .gitignore'));
+        }
+        else
+        {
+            console.log(chalk.gray('  跳过: .gitignore（已存在）'));
+        }
     }
 
     // 更新 .cursorrules
