@@ -68,6 +68,14 @@ export function getTypedocConfig(options: {
     return JSON.parse(content);
 }
 
+/**
+ * 获取 GitHub Actions publish workflow 模板内容
+ */
+export function getPublishWorkflowTemplate(): string
+{
+    return fs.readFileSync(path.join(TEMPLATES_DIR, '.github/workflows/publish.yml'), 'utf-8');
+}
+
 // 为了向后兼容，保留原有的变量导出
 /** @deprecated 请使用 getGitignoreTemplate() 函数 */
 export const gitignoreTemplate = getGitignoreTemplate();

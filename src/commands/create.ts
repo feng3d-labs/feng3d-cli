@@ -12,6 +12,7 @@ import {
     getTsconfigTemplate,
     getVitestConfigTemplate,
     getTypedocConfig,
+    getPublishWorkflowTemplate,
 } from '../templates.js';
 import { createEslintConfigFile } from './update.js';
 
@@ -94,6 +95,11 @@ export async function createProject(name: string, options: CreateOptions): Promi
         await fs.ensureDir(path.join(projectDir, 'test'));
         console.log(chalk.gray('  创建: test/'));
     }
+
+    // 创建 .github/workflows 目录和 publish.yml
+    await fs.ensureDir(path.join(projectDir, '.github/workflows'));
+    await fs.writeFile(path.join(projectDir, '.github/workflows/publish.yml'), getPublishWorkflowTemplate());
+    console.log(chalk.gray('  创建: .github/workflows/publish.yml'));
 }
 
 /**

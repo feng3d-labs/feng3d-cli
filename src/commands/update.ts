@@ -10,6 +10,7 @@ import {
     getGitignoreTemplate,
     getCursorrrulesTemplate,
     getEslintConfigTemplate,
+    getPublishWorkflowTemplate,
 } from '../templates.js';
 
 export interface UpdateOptions {
@@ -17,6 +18,7 @@ export interface UpdateOptions {
     eslint?: boolean;
     gitignore?: boolean;
     cursorrules?: boolean;
+    workflow?: boolean;
     deps?: boolean;
     all?: boolean;
 }
@@ -35,7 +37,7 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         throw new Error(`${projectDir} 不是有效的项目目录（未找到 package.json）`);
     }
 
-    const updateAll = options.all || (!options.eslint && !options.gitignore && !options.cursorrules && !options.deps);
+    const updateAll = options.all || (!options.eslint && !options.gitignore && !options.cursorrules && !options.workflow && !options.deps);
 
     // 更新 .gitignore
     if (updateAll || options.gitignore)
@@ -56,6 +58,14 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     {
         await createEslintConfigFile(projectDir);
         console.log(chalk.gray('  更新: eslint.config.js'));
+    }
+
+    // 更新 .github/workflows/publish.yml
+    if (updateAll || options.workflow)
+    {
+        await fs.ensureDir(path.join(projectDir, '.github/workflows'));
+        await fs.writeFile(path.join(projectDir, '.github/workflows/publish.yml'), getPublishWorkflowTemplate());
+        console.log(chalk.gray('  更新: .github/workflows/publish.yml'));
     }
 
     // 更新依赖版本

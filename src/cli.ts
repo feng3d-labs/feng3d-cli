@@ -46,6 +46,7 @@ program
     .option('--eslint', '仅更新 ESLint 配置')
     .option('--gitignore', '仅更新 .gitignore')
     .option('--cursorrules', '仅更新 .cursorrules')
+    .option('--workflow', '仅更新 GitHub Actions workflow')
     .option('--deps', '仅更新依赖版本')
     .option('--all', '更新所有配置')
     .action(async (options) =>
