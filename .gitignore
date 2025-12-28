@@ -20,4 +20,3 @@ typedoc.json
 test/_.test.ts
 .husky/pre-commit
 .vscode/settings.json
-vite.config.js

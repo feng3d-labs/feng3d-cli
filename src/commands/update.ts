@@ -424,8 +424,11 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         console.log(chalk.gray('  更新: .vscode/settings.json'));
     }
 
-    // 更新 tsconfig.json（仅在忽略列表中时覆盖）
-    if (updateConfig.tsconfig)
+    // feng3d-cli 项目：不更新 tsconfig.json 和 vite.config.js（有自定义配置），也不添加到 .gitignore
+    const isFeng3dCli = name === 'feng3d-cli';
+
+    // 更新 tsconfig.json（仅在忽略列表中时覆盖，feng3d-cli 跳过）
+    if (updateConfig.tsconfig && !isFeng3dCli)
     {
         const tsconfigPath = path.join(projectDir, 'tsconfig.json');
         const isIgnored = await isFileInGitignore(projectDir, 'tsconfig.json');
@@ -441,8 +444,8 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         }
     }
 
-    // 更新 vite.config.js（仅在忽略列表中时覆盖）
-    if (updateConfig.vite)
+    // 更新 vite.config.js（仅在忽略列表中时覆盖，feng3d-cli 跳过）
+    if (updateConfig.vite && !isFeng3dCli)
     {
         const viteConfigPath = path.join(projectDir, 'vite.config.js');
         const isIgnored = await isFileInGitignore(projectDir, 'vite.config.js');
@@ -459,7 +462,7 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     }
 
     // 同步 .gitignore，检查自动生成的文件是否被修改
-    await syncGitignoreForModifiedFiles(projectDir, templateContext);
+    await syncGitignoreForModifiedFiles(projectDir, templateContext, name);
 }
 
 /**
@@ -640,7 +643,7 @@ const AUTO_GENERATED_COMMENT = `# 以下文件可由 feng3d-cli 自动生成，�
 /**
  * 同步 .gitignore，确保自动生成的文件在忽略列表中
  */
-async function syncGitignoreForModifiedFiles(projectDir: string, _ctx: TemplateContext): Promise<void>
+async function syncGitignoreForModifiedFiles(projectDir: string, _ctx: TemplateContext, projectName: string): Promise<void>
 {
     const gitignorePath = path.join(projectDir, '.gitignore');
 
@@ -651,6 +654,10 @@ async function syncGitignoreForModifiedFiles(projectDir: string, _ctx: TemplateC
 
     let gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
     let modified = false;
+
+    // feng3d-cli 项目跳过 tsconfig.json 和 vite.config.js
+    const isFeng3dCli = projectName === 'feng3d-cli';
+    const skipFiles = isFeng3dCli ? ['tsconfig.json', 'vite.config.js'] : [];
 
     // 需要添加到 .gitignore 的文件列表
     const filesToAdd: string[] = [];
@@ -669,6 +676,12 @@ async function syncGitignoreForModifiedFiles(projectDir: string, _ctx: TemplateC
     // 只有当文件内容与模板一致时才添加到忽略列表
     for (const file of AUTO_GENERATED_FILES)
     {
+        // 跳过 feng3d-cli 项目的特殊文件
+        if (skipFiles.includes(file.path))
+        {
+            continue;
+        }
+
         const escapedPath = file.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`^${escapedPath}$`, 'm');
 

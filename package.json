@@ -7,28 +7,28 @@
   "license": "MIT",
   "type": "module",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./lib/index.d.ts",
   "bin": {
     "feng3d-cli": "./dist/cli.js"
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./lib/index.d.ts",
       "import": "./dist/index.js"
     },
     "./eslint": {
-      "types": "./dist/eslint.d.ts",
+      "types": "./lib/eslint.d.ts",
       "import": "./dist/eslint.js"
     }
   },
   "scripts": {
     "clean": "rimraf \"{lib,dist,public}\"",
-    "build": "tsc",
-    "dev": "tsc -w",
+    "build": "vite build && tsc",
+    "dev": "vite build --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "types": "tsc",
-    "watch": "tsc -w",
+    "watch": "vite build --watch",
     "lint": "eslint . --ext .js,.ts --max-warnings 0",
     "lintfix": "npm run lint -- --fix",
     "docs": "typedoc",
@@ -49,6 +49,7 @@
   },
   "files": [
     "dist",
+    "lib",
     "templates",
     "schemas"
   ],
