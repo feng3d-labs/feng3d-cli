@@ -53,19 +53,39 @@ export function getEslintConfigTemplate(): string
 }
 
 /**
- * 获取 typedoc.json 模板内容
+ * 获取 typedoc.json 模板内容（返回对象）
  */
 export function getTypedocConfig(options: {
     name: string;
     repoName: string;
 }): object
 {
+    return JSON.parse(getTypedocConfigTemplate(options));
+}
+
+/**
+ * 获取 typedoc.json 模板内容（返回字符串）
+ */
+export function getTypedocConfigTemplate(options: {
+    name: string;
+    repoName: string;
+}): string
+{
     const templateContent = fs.readFileSync(path.join(TEMPLATES_DIR, 'typedoc.json'), 'utf-8');
-    const content = templateContent
+
+    return templateContent
         .replace(/\{\{name\}\}/g, options.name)
         .replace(/\{\{repoName\}\}/g, options.repoName);
+}
 
-    return JSON.parse(content);
+/**
+ * 获取 test/index.test.ts 模板内容
+ */
+export function getTestIndexTemplate(options: { name: string }): string
+{
+    const templateContent = fs.readFileSync(path.join(TEMPLATES_DIR, 'test/index.test.ts'), 'utf-8');
+
+    return templateContent.replace(/\{\{name\}\}/g, options.name);
 }
 
 /**

@@ -87,7 +87,7 @@ export const DEFAULT_CONFIG: Feng3dConfig = {
     },
     typedoc: {
         enabled: true,
-        outDir: 'public/docs',
+        outDir: 'public',
     },
     oss: {
         localDir: './public',

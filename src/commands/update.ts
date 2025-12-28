@@ -13,6 +13,8 @@ import {
     getPublishWorkflowTemplate,
     getPagesWorkflowTemplate,
     getFeng3dConfigTemplate,
+    getTypedocConfigTemplate,
+    getTestIndexTemplate,
     detectSchemaPath,
 } from '../templates.js';
 import { Feng3dConfig, DEFAULT_CONFIG } from '../types/config.js';
@@ -25,17 +27,32 @@ export interface UpdateOptions {
     cursorrules?: boolean;
     publish?: boolean;
     pages?: boolean;
+    typedoc?: boolean;
+    test?: boolean;
     deps?: boolean;
     all?: boolean;
+}
+
+/**
+ * 模板上下文
+ */
+interface TemplateContext {
+    name: string;
+    repoName: string;
 }
 
 /**
  * 需要检查是否与模板相同的自动生成文件配置
  * 注意：workflow 文件不在此列表中，因为它们需要提交到仓库才能触发 CI
  */
-const AUTO_GENERATED_FILES = [
-    { path: '.cursorrules', getTemplate: getCursorrrulesTemplate },
-    { path: 'eslint.config.js', getTemplate: getEslintConfigTemplate },
+const AUTO_GENERATED_FILES: Array<{
+    path: string;
+    getTemplate: (ctx: TemplateContext) => string;
+}> = [
+    { path: '.cursorrules', getTemplate: () => getCursorrrulesTemplate() },
+    { path: 'eslint.config.js', getTemplate: () => getEslintConfigTemplate() },
+    { path: 'typedoc.json', getTemplate: (ctx) => getTypedocConfigTemplate({ name: ctx.name, repoName: ctx.repoName }) },
+    { path: 'test/index.test.ts', getTemplate: (ctx) => getTestIndexTemplate({ name: ctx.name }) },
 ];
 
 /**
@@ -143,7 +160,7 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         throw new Error(`${projectDir} 不是有效的项目目录（未找到 package.json）`);
     }
 
-    const updateAll = options.all || (!options.config && !options.eslint && !options.gitignore && !options.cursorrules && !options.publish && !options.pages && !options.deps);
+    const updateAll = options.all || (!options.config && !options.eslint && !options.gitignore && !options.cursorrules && !options.publish && !options.pages && !options.typedoc && !options.test && !options.deps);
 
     // 更新 feng3d.json 配置
     if (updateAll || options.config)
@@ -153,6 +170,12 @@ export async function updateProject(options: UpdateOptions): Promise<void>
 
     // 加载项目配置
     const config = await loadProjectConfig(projectDir);
+
+    // 获取项目信息用于模板
+    const packageJson = await fs.readJson(packageJsonPath);
+    const name = packageJson.name || path.basename(projectDir);
+    const repoName = name.replace(/^@[^/]+\//, ''); // 移除 scope 前缀
+    const templateContext: TemplateContext = { name, repoName };
 
     // 更新 .gitignore（仅在文件不存在时创建）
     if (updateAll || options.gitignore)
@@ -207,6 +230,39 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         console.log(chalk.gray('  更新: .github/workflows/pages.yml'));
     }
 
+    // 更新 typedoc.json（根据配置决定是否启用）
+    if (updateAll || options.typedoc)
+    {
+        if (config.typedoc?.enabled !== false)
+        {
+            const typedocContent = getTypedocConfigTemplate({ name, repoName });
+
+            await fs.writeFile(path.join(projectDir, 'typedoc.json'), typedocContent);
+            console.log(chalk.gray('  更新: typedoc.json'));
+        }
+        else
+        {
+            console.log(chalk.gray('  跳过: typedoc.json（配置中已禁用）'));
+        }
+    }
+
+    // 更新 test/index.test.ts（根据配置决定是否启用）
+    if (updateAll || options.test)
+    {
+        if (config.vitest?.enabled !== false)
+        {
+            await fs.ensureDir(path.join(projectDir, 'test'));
+            const testContent = getTestIndexTemplate({ name });
+
+            await fs.writeFile(path.join(projectDir, 'test/index.test.ts'), testContent);
+            console.log(chalk.gray('  更新: test/index.test.ts'));
+        }
+        else
+        {
+            console.log(chalk.gray('  跳过: test/index.test.ts（vitest 配置中已禁用）'));
+        }
+    }
+
     // 更新依赖版本（根据配置决定包含哪些依赖）
     if (updateAll || options.deps)
     {
@@ -215,7 +271,7 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     }
 
     // 同步 .gitignore，检查自动生成的文件是否被修改
-    await syncGitignoreForModifiedFiles(projectDir);
+    await syncGitignoreForModifiedFiles(projectDir, templateContext);
 }
 
 /**
@@ -291,7 +347,7 @@ const AUTO_GENERATED_COMMENT = `# 以下文件可由 feng3d-cli 自动生成，�
 /**
  * 同步 .gitignore，如果自动生成的文件被用户修改，则从忽略列表中移除
  */
-async function syncGitignoreForModifiedFiles(projectDir: string): Promise<void>
+async function syncGitignoreForModifiedFiles(projectDir: string, ctx: TemplateContext): Promise<void>
 {
     const gitignorePath = path.join(projectDir, '.gitignore');
 
@@ -342,7 +398,7 @@ async function syncGitignoreForModifiedFiles(projectDir: string): Promise<void>
         }
 
         const fileContent = await fs.readFile(filePath, 'utf-8');
-        const templateContent = file.getTemplate();
+        const templateContent = file.getTemplate(ctx);
         const isModified = fileContent !== templateContent;
 
         // 检查文件是否在 .gitignore 中
