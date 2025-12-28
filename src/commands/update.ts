@@ -24,6 +24,15 @@ export interface UpdateOptions {
 }
 
 /**
+ * 需要检查是否与模板相同的自动生成文件配置
+ */
+const AUTO_GENERATED_FILES = [
+    { path: '.cursorrules', getTemplate: getCursorrrulesTemplate },
+    { path: 'eslint.config.js', getTemplate: getEslintConfigTemplate },
+    { path: '.github/workflows/publish.yml', getTemplate: getPublishWorkflowTemplate },
+];
+
+/**
  * 更新项目的规范配置
  */
 export async function updateProject(options: UpdateOptions): Promise<void>
@@ -82,6 +91,9 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         await updateDependencies(projectDir);
         console.log(chalk.gray('  更新: package.json devDependencies'));
     }
+
+    // 同步 .gitignore，检查自动生成的文件是否被修改
+    await syncGitignoreForModifiedFiles(projectDir);
 }
 
 /**
@@ -117,3 +129,57 @@ async function updateDependencies(projectDir: string): Promise<void>
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 4 });
 }
 
+/**
+ * 同步 .gitignore，如果自动生成的文件被用户修改，则从忽略列表中移除
+ */
+async function syncGitignoreForModifiedFiles(projectDir: string): Promise<void>
+{
+    const gitignorePath = path.join(projectDir, '.gitignore');
+
+    if (!await fs.pathExists(gitignorePath))
+    {
+        return;
+    }
+
+    let gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
+    let modified = false;
+
+    for (const file of AUTO_GENERATED_FILES)
+    {
+        const filePath = path.join(projectDir, file.path);
+
+        if (!await fs.pathExists(filePath))
+        {
+            continue;
+        }
+
+        const fileContent = await fs.readFile(filePath, 'utf-8');
+        const templateContent = file.getTemplate();
+        const isModified = fileContent !== templateContent;
+
+        // 检查文件是否在 .gitignore 中
+        const escapedPath = file.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`^${escapedPath}$`, 'm');
+        const isInGitignore = regex.test(gitignoreContent);
+
+        if (isModified && isInGitignore)
+        {
+            // 文件被修改，从 .gitignore 中移除
+            gitignoreContent = gitignoreContent.replace(regex, '').replace(/\n\n+/g, '\n\n').trim() + '\n';
+            modified = true;
+            console.log(chalk.yellow(`  从 .gitignore 移除: ${file.path}（检测到自定义修改）`));
+        }
+        else if (!isModified && !isInGitignore)
+        {
+            // 文件未修改但不在 .gitignore 中，添加回去
+            gitignoreContent = gitignoreContent.trim() + '\n' + file.path + '\n';
+            modified = true;
+            console.log(chalk.gray(`  添加到 .gitignore: ${file.path}（与模板相同）`));
+        }
+    }
+
+    if (modified)
+    {
+        await fs.writeFile(gitignorePath, gitignoreContent);
+    }
+}
