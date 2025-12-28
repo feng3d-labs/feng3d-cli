@@ -16,8 +16,9 @@ export default defineConfig({
         target: 'node18',
         lib: {
             entry: resolve(__dirname, 'src/index.ts'),
-            formats: ['es'],
-            fileName: () => 'index.js',
+            name: 'feng3dCli',
+            formats: ['es', 'umd'],
+            fileName: 'index',
         },
         minify: false,
         sourcemap: true,
