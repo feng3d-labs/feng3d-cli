@@ -409,43 +409,15 @@ async function updateDependencies(projectDir: string, config: Feng3dConfig): Pro
 }
 
 /**
- * 检查 feng3d.json 是否与默认配置相同（忽略 name 字段）
- */
-async function isFeng3dConfigModified(projectDir: string): Promise<boolean>
-{
-    const configPath = path.join(projectDir, 'feng3d.json');
-
-    if (!await fs.pathExists(configPath))
-    {
-        return false;
-    }
-
-    try
-    {
-        const configData = await fs.readJson(configPath);
-
-        // 比较时忽略 name 和 $schema 字段
-        const { name: _name, $schema: _schema, ...userConfig } = configData;
-        const { name: _defaultName, ...defaultConfig } = DEFAULT_CONFIG;
-
-        return JSON.stringify(userConfig) !== JSON.stringify(defaultConfig);
-    }
-    catch
-    {
-        return true; // 解析失败视为已修改
-    }
-}
-
-/**
  * 自动生成文件的注释说明
  */
 const AUTO_GENERATED_COMMENT = `# 以下文件可由 feng3d-cli 自动生成，无需提交
 # 运行 \`feng3d-cli update\` 可重新生成`;
 
 /**
- * 同步 .gitignore，如果自动生成的文件被用户修改，则从忽略列表中移除
+ * 同步 .gitignore，确保自动生成的文件在忽略列表中
  */
-async function syncGitignoreForModifiedFiles(projectDir: string, ctx: TemplateContext): Promise<void>
+async function syncGitignoreForModifiedFiles(projectDir: string, _ctx: TemplateContext): Promise<void>
 {
     const gitignorePath = path.join(projectDir, '.gitignore');
 
@@ -459,71 +431,27 @@ async function syncGitignoreForModifiedFiles(projectDir: string, ctx: TemplateCo
 
     // 需要添加到 .gitignore 的文件列表
     const filesToAdd: string[] = [];
-    // 需要从 .gitignore 移除的文件列表
-    const filesToRemove: string[] = [];
 
-    // 处理 feng3d.json（特殊处理，比较 JSON 内容而非字符串）
+    // 检查 feng3d.json 是否在 .gitignore 中
     const feng3dConfigPath = 'feng3d.json';
-    const feng3dConfigFullPath = path.join(projectDir, feng3dConfigPath);
+    const escapedFeng3dPath = feng3dConfigPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const feng3dRegex = new RegExp(`^${escapedFeng3dPath}$`, 'm');
 
-    if (await fs.pathExists(feng3dConfigFullPath))
+    if (!feng3dRegex.test(gitignoreContent))
     {
-        const isConfigModified = await isFeng3dConfigModified(projectDir);
-        const escapedPath = feng3dConfigPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`^${escapedPath}$`, 'm');
-        const isInGitignore = regex.test(gitignoreContent);
-
-        if (isConfigModified && isInGitignore)
-        {
-            filesToRemove.push(feng3dConfigPath);
-            console.log(chalk.yellow(`  从 .gitignore 移除: ${feng3dConfigPath}（检测到自定义修改）`));
-        }
-        else if (!isConfigModified && !isInGitignore)
-        {
-            filesToAdd.push(feng3dConfigPath);
-            console.log(chalk.gray(`  添加到 .gitignore: ${feng3dConfigPath}（与默认配置相同）`));
-        }
+        filesToAdd.push(feng3dConfigPath);
     }
 
-    // 处理其他自动生成的文件
+    // 检查其他自动生成的文件是否在 .gitignore 中
     for (const file of AUTO_GENERATED_FILES)
     {
-        const filePath = path.join(projectDir, file.path);
-
-        if (!await fs.pathExists(filePath))
-        {
-            continue;
-        }
-
-        const fileContent = await fs.readFile(filePath, 'utf-8');
-        const templateContent = file.getTemplate(ctx);
-        const isModified = fileContent !== templateContent;
-
-        // 检查文件是否在 .gitignore 中
         const escapedPath = file.path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`^${escapedPath}$`, 'm');
-        const isInGitignore = regex.test(gitignoreContent);
 
-        if (isModified && isInGitignore)
-        {
-            filesToRemove.push(file.path);
-            console.log(chalk.yellow(`  从 .gitignore 移除: ${file.path}（检测到自定义修改）`));
-        }
-        else if (!isModified && !isInGitignore)
+        if (!regex.test(gitignoreContent))
         {
             filesToAdd.push(file.path);
-            console.log(chalk.gray(`  添加到 .gitignore: ${file.path}（与模板相同）`));
         }
-    }
-
-    // 移除需要删除的文件
-    for (const filePath of filesToRemove)
-    {
-        const escapedPath = filePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`^${escapedPath}$`, 'm');
-
-        gitignoreContent = gitignoreContent.replace(regex, '');
-        modified = true;
     }
 
     // 添加需要添加的文件
@@ -546,6 +474,11 @@ async function syncGitignoreForModifiedFiles(projectDir: string, ctx: TemplateCo
             }
         }
         modified = true;
+
+        for (const filePath of filesToAdd)
+        {
+            console.log(chalk.gray(`  添加到 .gitignore: ${filePath}`));
+        }
     }
 
     // 清理多余的空行
