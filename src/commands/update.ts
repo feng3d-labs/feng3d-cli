@@ -14,6 +14,7 @@ import {
     getEslintConfigTemplate,
     getPublishWorkflowTemplate,
     getPagesWorkflowTemplate,
+    getPullRequestWorkflowTemplate,
     getFeng3dConfigTemplate,
     getTypedocConfigTemplate,
     getTestIndexTemplate,
@@ -30,6 +31,7 @@ export interface UpdateOptions {
     cursorrules?: boolean;
     publish?: boolean;
     pages?: boolean;
+    pullRequest?: boolean;
     typedoc?: boolean;
     test?: boolean;
     deps?: boolean;
@@ -178,7 +180,8 @@ async function loadProjectConfig(projectDir: string): Promise<Feng3dConfig>
 function hasAnyUpdateOption(options: UpdateOptions): boolean
 {
     return !!(options.config || options.eslint || options.gitignore || options.cursorrules ||
-              options.publish || options.pages || options.typedoc || options.test || options.deps || options.husky);
+              options.publish || options.pages || options.pullRequest || options.typedoc ||
+              options.test || options.deps || options.husky);
 }
 
 /**
@@ -203,6 +206,7 @@ function mergeUpdateOptions(cliOptions: UpdateOptions, configUpdate: UpdateConfi
             cursorrules: cliOptions.cursorrules || false,
             publish: cliOptions.publish || false,
             pages: cliOptions.pages || false,
+            pullRequest: cliOptions.pullRequest || false,
             typedoc: cliOptions.typedoc || false,
             test: cliOptions.test || false,
             deps: cliOptions.deps || false,
@@ -298,6 +302,14 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         await fs.ensureDir(path.join(projectDir, '.github/workflows'));
         await fs.writeFile(path.join(projectDir, '.github/workflows/pages.yml'), getPagesWorkflowTemplate());
         console.log(chalk.gray('  更新: .github/workflows/pages.yml'));
+    }
+
+    // 更新 .github/workflows/pull-request.yml
+    if (updateConfig.pullRequest)
+    {
+        await fs.ensureDir(path.join(projectDir, '.github/workflows'));
+        await fs.writeFile(path.join(projectDir, '.github/workflows/pull-request.yml'), getPullRequestWorkflowTemplate());
+        console.log(chalk.gray('  更新: .github/workflows/pull-request.yml'));
     }
 
     // 更新 typedoc.json（根据配置决定是否启用）

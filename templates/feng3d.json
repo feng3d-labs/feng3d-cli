@@ -29,6 +29,7 @@
         "cursorrules": true,
         "publish": true,
         "pages": true,
+        "pullRequest": true,
         "typedoc": true,
         "test": true,
         "deps": true,

@@ -103,6 +103,14 @@ export function getPagesWorkflowTemplate(): string
 }
 
 /**
+ * 获取 GitHub Actions pull-request workflow 模板内容
+ */
+export function getPullRequestWorkflowTemplate(): string
+{
+    return fs.readFileSync(path.join(TEMPLATES_DIR, '.github/workflows/pull-request.yml'), 'utf-8');
+}
+
+/**
  * 获取 .husky/pre-commit 模板内容
  */
 export function getHuskyPreCommitTemplate(): string

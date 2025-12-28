@@ -70,6 +70,8 @@ export interface UpdateConfig {
     publish?: boolean;
     /** 是否更新 GitHub Pages workflow */
     pages?: boolean;
+    /** 是否更新 Pull Request CI workflow */
+    pullRequest?: boolean;
     /** 是否更新 typedoc.json */
     typedoc?: boolean;
     /** 是否更新 test/_.test.ts */
@@ -110,6 +112,7 @@ export const DEFAULT_UPDATE_CONFIG: UpdateConfig = {
     cursorrules: true,
     publish: true,
     pages: true,
+    pullRequest: true,
     typedoc: true,
     test: true,
     deps: true,

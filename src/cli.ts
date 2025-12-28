@@ -49,6 +49,7 @@ program
     .option('--cursorrules', '仅更新 .cursorrules')
     .option('--publish', '仅更新 npm publish workflow')
     .option('--pages', '仅更新 GitHub Pages workflow')
+    .option('--pull-request', '仅更新 Pull Request CI workflow')
     .option('--typedoc', '仅更新 typedoc.json')
     .option('--test', '仅更新 test/_.test.ts')
     .option('--deps', '仅更新依赖版本')
