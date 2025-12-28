@@ -17,7 +17,7 @@ import {
     getTestIndexTemplate,
     detectSchemaPath,
 } from '../templates.js';
-import { Feng3dConfig, DEFAULT_CONFIG } from '../types/config.js';
+import { Feng3dConfig, DEFAULT_CONFIG, DEFAULT_UPDATE_CONFIG, UpdateConfig } from '../types/config.js';
 
 export interface UpdateOptions {
     directory: string;
@@ -52,8 +52,27 @@ const AUTO_GENERATED_FILES: Array<{
     { path: '.cursorrules', getTemplate: () => getCursorrrulesTemplate() },
     { path: 'eslint.config.js', getTemplate: () => getEslintConfigTemplate() },
     { path: 'typedoc.json', getTemplate: (ctx) => getTypedocConfigTemplate({ name: ctx.name, repoName: ctx.repoName }) },
-    { path: 'test/index.test.ts', getTemplate: (ctx) => getTestIndexTemplate({ name: ctx.name }) },
+    { path: 'test/_.test.ts', getTemplate: (ctx) => getTestIndexTemplate({ name: ctx.name }) },
 ];
+
+/**
+ * 检查文件是否在 .gitignore 的自动生成文件列表中
+ */
+async function isFileInGitignore(projectDir: string, filePath: string): Promise<boolean>
+{
+    const gitignorePath = path.join(projectDir, '.gitignore');
+
+    if (!await fs.pathExists(gitignorePath))
+    {
+        return false;
+    }
+
+    const gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
+    const escapedPath = filePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`^${escapedPath}$`, 'm');
+
+    return regex.test(gitignoreContent);
+}
 
 /**
  * 更新 feng3d.json 配置文件
@@ -68,17 +87,20 @@ async function updateFeng3dConfig(projectDir: string): Promise<void>
     const packageJson = await fs.readJson(packageJsonPath);
     const name = packageJson.name || path.basename(projectDir);
 
-    if (!await fs.pathExists(configPath))
+    // 检查文件是否在 .gitignore 中（自动生成的文件直接覆盖）
+    const isInGitignore = await isFileInGitignore(projectDir, 'feng3d.json');
+
+    if (!await fs.pathExists(configPath) || isInGitignore)
     {
-        // 创建新的 feng3d.json
+        // 创建或覆盖 feng3d.json
         const configTemplate = getFeng3dConfigTemplate({ name, schemaPath });
 
         await fs.writeJson(configPath, configTemplate, { spaces: 4 });
-        console.log(chalk.gray('  创建: feng3d.json'));
+        console.log(chalk.gray(isInGitignore ? '  覆盖: feng3d.json（在忽略列表中）' : '  创建: feng3d.json'));
     }
     else
     {
-        // 更新现有的 feng3d.json
+        // 更新现有的 feng3d.json（保留用户自定义配置）
         try
         {
             const configData = await fs.readJson(configPath);
@@ -146,6 +168,47 @@ async function loadProjectConfig(projectDir: string): Promise<Feng3dConfig>
 }
 
 /**
+ * 检查是否有任何 CLI 更新选项被指定
+ */
+function hasAnyUpdateOption(options: UpdateOptions): boolean
+{
+    return !!(options.config || options.eslint || options.gitignore || options.cursorrules ||
+              options.publish || options.pages || options.typedoc || options.test || options.deps);
+}
+
+/**
+ * 合并 CLI 选项和配置文件中的更新选项
+ * CLI 选项优先级高于配置文件
+ */
+function mergeUpdateOptions(cliOptions: UpdateOptions, configUpdate: UpdateConfig): UpdateConfig
+{
+    // 如果用户指定了 --all，则全部更新
+    if (cliOptions.all)
+    {
+        return DEFAULT_UPDATE_CONFIG;
+    }
+
+    // 如果用户指定了任何特定选项，则只使用 CLI 选项
+    if (hasAnyUpdateOption(cliOptions))
+    {
+        return {
+            config: cliOptions.config || false,
+            eslint: cliOptions.eslint || false,
+            gitignore: cliOptions.gitignore || false,
+            cursorrules: cliOptions.cursorrules || false,
+            publish: cliOptions.publish || false,
+            pages: cliOptions.pages || false,
+            typedoc: cliOptions.typedoc || false,
+            test: cliOptions.test || false,
+            deps: cliOptions.deps || false,
+        };
+    }
+
+    // 否则使用配置文件中的设置
+    return { ...DEFAULT_UPDATE_CONFIG, ...configUpdate };
+}
+
+/**
  * 更新项目的规范配置
  */
 export async function updateProject(options: UpdateOptions): Promise<void>
@@ -160,16 +223,17 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         throw new Error(`${projectDir} 不是有效的项目目录（未找到 package.json）`);
     }
 
-    const updateAll = options.all || (!options.config && !options.eslint && !options.gitignore && !options.cursorrules && !options.publish && !options.pages && !options.typedoc && !options.test && !options.deps);
+    // 加载项目配置
+    const config = await loadProjectConfig(projectDir);
+
+    // 合并 CLI 选项和配置文件中的更新选项
+    const updateConfig = mergeUpdateOptions(options, config.update || {});
 
     // 更新 feng3d.json 配置
-    if (updateAll || options.config)
+    if (updateConfig.config)
     {
         await updateFeng3dConfig(projectDir);
     }
-
-    // 加载项目配置
-    const config = await loadProjectConfig(projectDir);
 
     // 获取项目信息用于模板
     const packageJson = await fs.readJson(packageJsonPath);
@@ -178,7 +242,7 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     const templateContext: TemplateContext = { name, repoName };
 
     // 更新 .gitignore（仅在文件不存在时创建）
-    if (updateAll || options.gitignore)
+    if (updateConfig.gitignore)
     {
         const gitignorePath = path.join(projectDir, '.gitignore');
 
@@ -194,14 +258,14 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     }
 
     // 更新 .cursorrules
-    if (updateAll || options.cursorrules)
+    if (updateConfig.cursorrules)
     {
         await fs.writeFile(path.join(projectDir, '.cursorrules'), getCursorrrulesTemplate());
         console.log(chalk.gray('  更新: .cursorrules'));
     }
 
     // 更新 eslint.config.js（根据配置决定是否启用）
-    if (updateAll || options.eslint)
+    if (updateConfig.eslint)
     {
         if (config.eslint?.enabled !== false)
         {
@@ -215,7 +279,7 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     }
 
     // 更新 .github/workflows/publish.yml
-    if (updateAll || options.publish)
+    if (updateConfig.publish)
     {
         await fs.ensureDir(path.join(projectDir, '.github/workflows'));
         await fs.writeFile(path.join(projectDir, '.github/workflows/publish.yml'), getPublishWorkflowTemplate());
@@ -223,7 +287,7 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     }
 
     // 更新 .github/workflows/pages.yml
-    if (updateAll || options.pages)
+    if (updateConfig.pages)
     {
         await fs.ensureDir(path.join(projectDir, '.github/workflows'));
         await fs.writeFile(path.join(projectDir, '.github/workflows/pages.yml'), getPagesWorkflowTemplate());
@@ -231,7 +295,7 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     }
 
     // 更新 typedoc.json（根据配置决定是否启用）
-    if (updateAll || options.typedoc)
+    if (updateConfig.typedoc)
     {
         if (config.typedoc?.enabled !== false)
         {
@@ -247,24 +311,46 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     }
 
     // 更新 test/index.test.ts（根据配置决定是否启用）
-    if (updateAll || options.test)
+    if (updateConfig.test)
     {
         if (config.vitest?.enabled !== false)
         {
-            await fs.ensureDir(path.join(projectDir, 'test'));
-            const testContent = getTestIndexTemplate({ name });
+            const testDir = path.join(projectDir, 'test');
+            const testFilePath = path.join(testDir, '_.test.ts');
 
-            await fs.writeFile(path.join(projectDir, 'test/index.test.ts'), testContent);
-            console.log(chalk.gray('  更新: test/index.test.ts'));
+            // 检查测试目录是否有其他文件
+            let hasOtherFiles = false;
+
+            if (await fs.pathExists(testDir))
+            {
+                const files = await fs.readdir(testDir);
+
+                // 排除 _.test.ts 本身，检查是否有其他文件
+                hasOtherFiles = files.some(file => file !== '_.test.ts');
+            }
+
+            // 只有在测试目录没有其他文件时才生成
+            if (!hasOtherFiles)
+            {
+                await fs.ensureDir(testDir);
+                const testContent = getTestIndexTemplate({ name });
+
+                await fs.writeFile(testFilePath, testContent);
+                console.log(chalk.gray('  更新: test/_.test.ts'));
+            }
+            else
+            {
+                console.log(chalk.gray('  跳过: test/_.test.ts（测试目录已有其他文件）'));
+            }
         }
         else
         {
-            console.log(chalk.gray('  跳过: test/index.test.ts（vitest 配置中已禁用）'));
+            console.log(chalk.gray('  跳过: test/_.test.ts（vitest 配置中已禁用）'));
         }
     }
 
     // 更新依赖版本（根据配置决定包含哪些依赖）
-    if (updateAll || options.deps)
+    if (updateConfig.deps)
     {
         await updateDependencies(projectDir, config);
         console.log(chalk.gray('  更新: package.json devDependencies'));

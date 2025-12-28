@@ -55,6 +55,30 @@ export interface TemplatesConfig {
 }
 
 /**
+ * 更新配置选项
+ */
+export interface UpdateConfig {
+    /** 是否更新 feng3d.json 配置 */
+    config?: boolean;
+    /** 是否更新 ESLint 配置 */
+    eslint?: boolean;
+    /** 是否更新 .gitignore */
+    gitignore?: boolean;
+    /** 是否更新 .cursorrules */
+    cursorrules?: boolean;
+    /** 是否更新 npm publish workflow */
+    publish?: boolean;
+    /** 是否更新 GitHub Pages workflow */
+    pages?: boolean;
+    /** 是否更新 typedoc.json */
+    typedoc?: boolean;
+    /** 是否更新 test/_.test.ts */
+    test?: boolean;
+    /** 是否更新依赖版本 */
+    deps?: boolean;
+}
+
+/**
  * feng3d 项目配置
  */
 export interface Feng3dConfig {
@@ -70,7 +94,24 @@ export interface Feng3dConfig {
     oss?: OssConfig;
     /** 模板配置 */
     templates?: TemplatesConfig;
+    /** 更新配置（指定 feng3d-cli update 时默认更新哪些项目） */
+    update?: UpdateConfig;
 }
+
+/**
+ * 默认更新配置（全部启用）
+ */
+export const DEFAULT_UPDATE_CONFIG: UpdateConfig = {
+    config: true,
+    eslint: true,
+    gitignore: true,
+    cursorrules: true,
+    publish: true,
+    pages: true,
+    typedoc: true,
+    test: true,
+    deps: true,
+};
 
 /**
  * 默认配置
@@ -97,5 +138,6 @@ export const DEFAULT_CONFIG: Feng3dConfig = {
         examples: true,
         test: true,
     },
+    update: DEFAULT_UPDATE_CONFIG,
 };
 

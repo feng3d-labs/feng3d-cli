@@ -79,13 +79,11 @@ export function getTypedocConfigTemplate(options: {
 }
 
 /**
- * 获取 test/index.test.ts 模板内容
+ * 获取 test/_.test.ts 模板内容（空文件占位）
  */
-export function getTestIndexTemplate(options: { name: string }): string
+export function getTestIndexTemplate(_options: { name: string }): string
 {
-    const templateContent = fs.readFileSync(path.join(TEMPLATES_DIR, 'test/index.test.ts'), 'utf-8');
-
-    return templateContent.replace(/\{\{name\}\}/g, options.name);
+    return fs.readFileSync(path.join(TEMPLATES_DIR, 'test/_.test.ts'), 'utf-8');
 }
 
 /**

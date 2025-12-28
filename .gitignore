@@ -16,4 +16,4 @@ feng3d.json
 .cursorrules
 eslint.config.js
 typedoc.json
-test/index.test.ts
+test/_.test.ts
