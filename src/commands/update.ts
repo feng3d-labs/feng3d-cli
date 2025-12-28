@@ -515,6 +515,7 @@ async function updateDependencies(projectDir: string, config: Feng3dConfig): Pro
         docs: 'typedoc',
         upload_oss: 'npm run docs && feng3d-cli oss_upload_dir',
         update: 'npx feng3d-cli update && npm install',
+        postinstall: 'npx feng3d-cli update || exit 0',
     };
 
     for (const [key, value] of Object.entries(standardScripts))

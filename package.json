@@ -37,7 +37,8 @@
     "release": "npm run clean && npm run lint && npm run build && npm run docs && npm publish",
     "prepublishOnly": "npm run lint && npm test && npm run build",
     "publish:manual": "npm publish",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "npm run build && node dist/cli.js update || exit 0"
   },
   "publishConfig": {
     "access": "public"
