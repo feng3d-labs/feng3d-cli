@@ -11,6 +11,7 @@ import {
     getCursorrrulesTemplate,
     getEslintConfigTemplate,
     getPublishWorkflowTemplate,
+    getFeng3dConfigTemplate,
 } from '../templates.js';
 import { Feng3dConfig, DEFAULT_CONFIG } from '../types/config.js';
 
@@ -34,7 +35,7 @@ const AUTO_GENERATED_FILES = [
 ];
 
 /**
- * 读取项目的 feng3d.json 配置文件
+ * 读取项目的 feng3d.json 配置文件，如果不存在则自动创建
  */
 async function loadProjectConfig(projectDir: string): Promise<Feng3dConfig>
 {
@@ -42,9 +43,17 @@ async function loadProjectConfig(projectDir: string): Promise<Feng3dConfig>
 
     if (!await fs.pathExists(configPath))
     {
-        console.log(chalk.gray('  未找到 feng3d.json，使用默认配置'));
+        // 从 package.json 读取项目名称
+        const packageJsonPath = path.join(projectDir, 'package.json');
+        const packageJson = await fs.readJson(packageJsonPath);
+        const name = packageJson.name || path.basename(projectDir);
 
-        return DEFAULT_CONFIG;
+        // 自动创建 feng3d.json
+        const configTemplate = getFeng3dConfigTemplate({ name });
+        await fs.writeJson(configPath, configTemplate, { spaces: 4 });
+        console.log(chalk.gray('  创建: feng3d.json'));
+
+        return { ...DEFAULT_CONFIG, name };
     }
 
     try
@@ -174,6 +183,34 @@ async function updateDependencies(projectDir: string, config: Feng3dConfig): Pro
 }
 
 /**
+ * 检查 feng3d.json 是否与默认配置相同（忽略 name 字段）
+ */
+async function isFeng3dConfigModified(projectDir: string): Promise<boolean>
+{
+    const configPath = path.join(projectDir, 'feng3d.json');
+
+    if (!await fs.pathExists(configPath))
+    {
+        return false;
+    }
+
+    try
+    {
+        const configData = await fs.readJson(configPath);
+
+        // 比较时忽略 name 和 $schema 字段
+        const { name: _name, $schema: _schema, ...userConfig } = configData;
+        const { name: _defaultName, ...defaultConfig } = DEFAULT_CONFIG;
+
+        return JSON.stringify(userConfig) !== JSON.stringify(defaultConfig);
+    }
+    catch
+    {
+        return true; // 解析失败视为已修改
+    }
+}
+
+/**
  * 同步 .gitignore，如果自动生成的文件被用户修改，则从忽略列表中移除
  */
 async function syncGitignoreForModifiedFiles(projectDir: string): Promise<void>
@@ -188,6 +225,32 @@ async function syncGitignoreForModifiedFiles(projectDir: string): Promise<void>
     let gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
     let modified = false;
 
+    // 处理 feng3d.json（特殊处理，比较 JSON 内容而非字符串）
+    const feng3dConfigPath = 'feng3d.json';
+    const feng3dConfigFullPath = path.join(projectDir, feng3dConfigPath);
+
+    if (await fs.pathExists(feng3dConfigFullPath))
+    {
+        const isConfigModified = await isFeng3dConfigModified(projectDir);
+        const escapedPath = feng3dConfigPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`^${escapedPath}$`, 'm');
+        const isInGitignore = regex.test(gitignoreContent);
+
+        if (isConfigModified && isInGitignore)
+        {
+            gitignoreContent = gitignoreContent.replace(regex, '').replace(/\n\n+/g, '\n\n').trim() + '\n';
+            modified = true;
+            console.log(chalk.yellow(`  从 .gitignore 移除: ${feng3dConfigPath}（检测到自定义修改）`));
+        }
+        else if (!isConfigModified && !isInGitignore)
+        {
+            gitignoreContent = gitignoreContent.trim() + '\n' + feng3dConfigPath + '\n';
+            modified = true;
+            console.log(chalk.gray(`  添加到 .gitignore: ${feng3dConfigPath}（与默认配置相同）`));
+        }
+    }
+
+    // 处理其他自动生成的文件
     for (const file of AUTO_GENERATED_FILES)
     {
         const filePath = path.join(projectDir, file.path);
