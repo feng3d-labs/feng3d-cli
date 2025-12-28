@@ -17,7 +17,8 @@ const TEMPLATES_DIR = path.resolve(__dirname, '../templates');
  */
 export function getGitignoreTemplate(): string
 {
-    return fs.readFileSync(path.join(TEMPLATES_DIR, '.gitignore'), 'utf-8');
+    // 模板文件命名为 gitignore（不带点），避免对 templates 目录生效
+    return fs.readFileSync(path.join(TEMPLATES_DIR, 'gitignore'), 'utf-8');
 }
 
 /**
