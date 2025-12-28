@@ -13,6 +13,7 @@ import {
     getVitestConfigTemplate,
     getTypedocConfig,
     getPublishWorkflowTemplate,
+    getFeng3dConfigTemplate,
 } from '../templates.js';
 import { createEslintConfigFile } from './update.js';
 
@@ -100,6 +101,10 @@ export async function createProject(name: string, options: CreateOptions): Promi
     await fs.ensureDir(path.join(projectDir, '.github/workflows'));
     await fs.writeFile(path.join(projectDir, '.github/workflows/publish.yml'), getPublishWorkflowTemplate());
     console.log(chalk.gray('  创建: .github/workflows/publish.yml'));
+
+    // 创建 feng3dconfig.js 配置文件
+    await fs.writeFile(path.join(projectDir, 'feng3dconfig.js'), getFeng3dConfigTemplate({ name }));
+    console.log(chalk.gray('  创建: feng3dconfig.js'));
 }
 
 /**

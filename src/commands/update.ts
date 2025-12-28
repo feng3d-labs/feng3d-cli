@@ -4,6 +4,7 @@
 
 import fs from 'fs-extra';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import chalk from 'chalk';
 import { getDevDependencies } from '../versions.js';
 import {
@@ -12,6 +13,7 @@ import {
     getEslintConfigTemplate,
     getPublishWorkflowTemplate,
 } from '../templates.js';
+import { Feng3dConfig, DEFAULT_CONFIG } from '../types/config.js';
 
 export interface UpdateOptions {
     directory: string;
@@ -33,6 +35,38 @@ const AUTO_GENERATED_FILES = [
 ];
 
 /**
+ * 读取项目的 feng3dconfig.js 配置文件
+ */
+async function loadProjectConfig(projectDir: string): Promise<Feng3dConfig>
+{
+    const configPath = path.join(projectDir, 'feng3dconfig.js');
+
+    if (!await fs.pathExists(configPath))
+    {
+        console.log(chalk.gray('  未找到 feng3dconfig.js，使用默认配置'));
+
+        return DEFAULT_CONFIG;
+    }
+
+    try
+    {
+        // 使用动态 import 加载 ES module 配置文件
+        const configUrl = pathToFileURL(configPath).href;
+        const configModule = await import(configUrl);
+
+        console.log(chalk.gray('  加载配置: feng3dconfig.js'));
+
+        return { ...DEFAULT_CONFIG, ...configModule.default };
+    }
+    catch (error)
+    {
+        console.log(chalk.yellow(`  警告: 无法加载 feng3dconfig.js，使用默认配置 (${error})`));
+
+        return DEFAULT_CONFIG;
+    }
+}
+
+/**
  * 更新项目的规范配置
  */
 export async function updateProject(options: UpdateOptions): Promise<void>
@@ -45,6 +79,9 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     {
         throw new Error(`${projectDir} 不是有效的项目目录（未找到 package.json）`);
     }
+
+    // 加载项目配置
+    const config = await loadProjectConfig(projectDir);
 
     const updateAll = options.all || (!options.eslint && !options.gitignore && !options.cursorrules && !options.workflow && !options.deps);
 
@@ -70,11 +107,18 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         console.log(chalk.gray('  更新: .cursorrules'));
     }
 
-    // 更新 eslint.config.js
+    // 更新 eslint.config.js（根据配置决定是否启用）
     if (updateAll || options.eslint)
     {
-        await createEslintConfigFile(projectDir);
-        console.log(chalk.gray('  更新: eslint.config.js'));
+        if (config.eslint?.enabled !== false)
+        {
+            await createEslintConfigFile(projectDir);
+            console.log(chalk.gray('  更新: eslint.config.js'));
+        }
+        else
+        {
+            console.log(chalk.gray('  跳过: eslint.config.js（配置中已禁用）'));
+        }
     }
 
     // 更新 .github/workflows/publish.yml
@@ -85,10 +129,10 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         console.log(chalk.gray('  更新: .github/workflows/publish.yml'));
     }
 
-    // 更新依赖版本
+    // 更新依赖版本（根据配置决定包含哪些依赖）
     if (updateAll || options.deps)
     {
-        await updateDependencies(projectDir);
+        await updateDependencies(projectDir, config);
         console.log(chalk.gray('  更新: package.json devDependencies'));
     }
 
@@ -107,12 +151,15 @@ export async function createEslintConfigFile(projectDir: string): Promise<void>
 /**
  * 更新 package.json 中的 devDependencies 版本
  */
-async function updateDependencies(projectDir: string): Promise<void>
+async function updateDependencies(projectDir: string, config: Feng3dConfig): Promise<void>
 {
     const packageJsonPath = path.join(projectDir, 'package.json');
     const packageJson = await fs.readJson(packageJsonPath);
 
-    const standardDeps = getDevDependencies({ includeVitest: true, includeTypedoc: true });
+    const standardDeps = getDevDependencies({
+        includeVitest: config.vitest?.enabled !== false,
+        includeTypedoc: config.typedoc?.enabled !== false,
+    });
 
     // 只更新已存在的依赖的版本
     if (packageJson.devDependencies)

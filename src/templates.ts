@@ -76,6 +76,16 @@ export function getPublishWorkflowTemplate(): string
     return fs.readFileSync(path.join(TEMPLATES_DIR, '.github/workflows/publish.yml'), 'utf-8');
 }
 
+/**
+ * 获取 feng3dconfig.js 模板内容
+ */
+export function getFeng3dConfigTemplate(options: { name: string }): string
+{
+    const templateContent = fs.readFileSync(path.join(TEMPLATES_DIR, 'feng3dconfig.js'), 'utf-8');
+
+    return templateContent.replace(/\{\{name\}\}/g, options.name);
+}
+
 // 为了向后兼容，保留原有的变量导出
 /** @deprecated 请使用 getGitignoreTemplate() 函数 */
 export const gitignoreTemplate = getGitignoreTemplate();
