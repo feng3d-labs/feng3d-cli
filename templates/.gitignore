@@ -12,6 +12,7 @@ coverage
 
 # 以下文件可由 feng3d-cli 自动生成，无需提交
 # 运行 `feng3d-cli update --all` 可重新生成
+.gitignore
 .cursorrules
 eslint.config.js
 .github/workflows/publish.yml
