@@ -55,6 +55,7 @@ const AUTO_GENERATED_FILES: Array<{
     { path: 'eslint.config.js', getTemplate: () => getEslintConfigTemplate() },
     { path: 'typedoc.json', getTemplate: (ctx) => getTypedocConfigTemplate({ name: ctx.name, repoName: ctx.repoName }) },
     { path: 'test/_.test.ts', getTemplate: (ctx) => getTestIndexTemplate({ name: ctx.name }) },
+    { path: '.husky/pre-commit', getTemplate: () => getHuskyPreCommitTemplate() },
 ];
 
 /**

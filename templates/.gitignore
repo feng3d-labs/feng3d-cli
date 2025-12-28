@@ -17,3 +17,4 @@ feng3d.json
 eslint.config.js
 typedoc.json
 test/_.test.ts
+.husky/pre-commit
