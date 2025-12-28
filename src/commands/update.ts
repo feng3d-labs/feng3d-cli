@@ -11,6 +11,7 @@ import {
     getCursorrrulesTemplate,
     getEslintConfigTemplate,
     getPublishWorkflowTemplate,
+    getPagesWorkflowTemplate,
     getFeng3dConfigTemplate,
     detectSchemaPath,
 } from '../templates.js';
@@ -18,64 +19,104 @@ import { Feng3dConfig, DEFAULT_CONFIG } from '../types/config.js';
 
 export interface UpdateOptions {
     directory: string;
+    config?: boolean;
     eslint?: boolean;
     gitignore?: boolean;
     cursorrules?: boolean;
-    workflow?: boolean;
+    publish?: boolean;
+    pages?: boolean;
     deps?: boolean;
     all?: boolean;
 }
 
 /**
  * 需要检查是否与模板相同的自动生成文件配置
+ * 注意：workflow 文件不在此列表中，因为它们需要提交到仓库才能触发 CI
  */
 const AUTO_GENERATED_FILES = [
     { path: '.cursorrules', getTemplate: getCursorrrulesTemplate },
     { path: 'eslint.config.js', getTemplate: getEslintConfigTemplate },
-    { path: '.github/workflows/publish.yml', getTemplate: getPublishWorkflowTemplate },
 ];
 
 /**
- * 读取项目的 feng3d.json 配置文件，如果不存在则自动创建
+ * 更新 feng3d.json 配置文件
+ */
+async function updateFeng3dConfig(projectDir: string): Promise<void>
+{
+    const configPath = path.join(projectDir, 'feng3d.json');
+    const schemaPath = detectSchemaPath(projectDir);
+
+    // 从 package.json 读取项目名称
+    const packageJsonPath = path.join(projectDir, 'package.json');
+    const packageJson = await fs.readJson(packageJsonPath);
+    const name = packageJson.name || path.basename(projectDir);
+
+    if (!await fs.pathExists(configPath))
+    {
+        // 创建新的 feng3d.json
+        const configTemplate = getFeng3dConfigTemplate({ name, schemaPath });
+
+        await fs.writeJson(configPath, configTemplate, { spaces: 4 });
+        console.log(chalk.gray('  创建: feng3d.json'));
+    }
+    else
+    {
+        // 更新现有的 feng3d.json
+        try
+        {
+            const configData = await fs.readJson(configPath);
+            let updated = false;
+
+            // 更新 $schema 路径
+            if (configData.$schema !== schemaPath)
+            {
+                configData.$schema = schemaPath;
+                updated = true;
+            }
+
+            // 更新 name（如果与 package.json 不同）
+            if (configData.name !== name)
+            {
+                configData.name = name;
+                updated = true;
+            }
+
+            if (updated)
+            {
+                await fs.writeJson(configPath, configData, { spaces: 4 });
+                console.log(chalk.gray('  更新: feng3d.json'));
+            }
+            else
+            {
+                console.log(chalk.gray('  跳过: feng3d.json（无需更新）'));
+            }
+        }
+        catch (error)
+        {
+            // 文件损坏，重新创建
+            const configTemplate = getFeng3dConfigTemplate({ name, schemaPath });
+
+            await fs.writeJson(configPath, configTemplate, { spaces: 4 });
+            console.log(chalk.gray('  重建: feng3d.json'));
+        }
+    }
+}
+
+/**
+ * 读取项目的 feng3d.json 配置文件
  */
 async function loadProjectConfig(projectDir: string): Promise<Feng3dConfig>
 {
     const configPath = path.join(projectDir, 'feng3d.json');
 
-    // 检测可用的 schema 路径
-    const schemaPath = detectSchemaPath(projectDir);
-
     if (!await fs.pathExists(configPath))
     {
-        // 从 package.json 读取项目名称
-        const packageJsonPath = path.join(projectDir, 'package.json');
-        const packageJson = await fs.readJson(packageJsonPath);
-        const name = packageJson.name || path.basename(projectDir);
-
-        // 自动创建 feng3d.json，使用检测到的 schema 路径
-        const configTemplate = getFeng3dConfigTemplate({ name, schemaPath });
-
-        await fs.writeJson(configPath, configTemplate, { spaces: 4 });
-        console.log(chalk.gray('  创建: feng3d.json'));
-
-        return { ...DEFAULT_CONFIG, name };
+        return DEFAULT_CONFIG;
     }
 
     try
     {
         const configData = await fs.readJson(configPath);
-
-        // 更新 $schema 路径（如果需要）
-        if (configData.$schema !== schemaPath)
-        {
-            configData.$schema = schemaPath;
-            await fs.writeJson(configPath, configData, { spaces: 4 });
-            console.log(chalk.gray(`  更新: feng3d.json $schema -> ${schemaPath}`));
-        }
-        else
-        {
-            console.log(chalk.gray('  加载配置: feng3d.json'));
-        }
 
         return { ...DEFAULT_CONFIG, ...configData };
     }
@@ -102,10 +143,16 @@ export async function updateProject(options: UpdateOptions): Promise<void>
         throw new Error(`${projectDir} 不是有效的项目目录（未找到 package.json）`);
     }
 
+    const updateAll = options.all || (!options.config && !options.eslint && !options.gitignore && !options.cursorrules && !options.publish && !options.pages && !options.deps);
+
+    // 更新 feng3d.json 配置
+    if (updateAll || options.config)
+    {
+        await updateFeng3dConfig(projectDir);
+    }
+
     // 加载项目配置
     const config = await loadProjectConfig(projectDir);
-
-    const updateAll = options.all || (!options.eslint && !options.gitignore && !options.cursorrules && !options.workflow && !options.deps);
 
     // 更新 .gitignore（仅在文件不存在时创建）
     if (updateAll || options.gitignore)
@@ -145,11 +192,19 @@ export async function updateProject(options: UpdateOptions): Promise<void>
     }
 
     // 更新 .github/workflows/publish.yml
-    if (updateAll || options.workflow)
+    if (updateAll || options.publish)
     {
         await fs.ensureDir(path.join(projectDir, '.github/workflows'));
         await fs.writeFile(path.join(projectDir, '.github/workflows/publish.yml'), getPublishWorkflowTemplate());
         console.log(chalk.gray('  更新: .github/workflows/publish.yml'));
+    }
+
+    // 更新 .github/workflows/pages.yml
+    if (updateAll || options.pages)
+    {
+        await fs.ensureDir(path.join(projectDir, '.github/workflows'));
+        await fs.writeFile(path.join(projectDir, '.github/workflows/pages.yml'), getPagesWorkflowTemplate());
+        console.log(chalk.gray('  更新: .github/workflows/pages.yml'));
     }
 
     // 更新依赖版本（根据配置决定包含哪些依赖）

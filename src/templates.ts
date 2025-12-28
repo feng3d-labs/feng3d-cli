@@ -77,6 +77,14 @@ export function getPublishWorkflowTemplate(): string
 }
 
 /**
+ * 获取 GitHub Actions pages workflow 模板内容
+ */
+export function getPagesWorkflowTemplate(): string
+{
+    return fs.readFileSync(path.join(TEMPLATES_DIR, '.github/workflows/pages.yml'), 'utf-8');
+}
+
+/**
  * 可能的 schema 路径列表（按优先级排序）
  */
 const SCHEMA_PATHS = [

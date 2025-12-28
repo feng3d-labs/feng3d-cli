@@ -15,4 +15,3 @@ coverage
 feng3d.json
 .cursorrules
 eslint.config.js
-.github/workflows/publish.yml
