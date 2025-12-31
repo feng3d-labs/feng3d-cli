@@ -73,17 +73,6 @@ program
     });
 
 program
-    .command('check')
-    .description('检查当前项目是否符合 feng3d 规范')
-    .option('-d, --directory <dir>', '项目目录', '.')
-    .action(async () =>
-    {
-        console.log(chalk.blue('\n🔍 检查项目规范\n'));
-        // TODO: 实现规范检查
-        console.log(chalk.yellow('暂未实现'));
-    });
-
-program
     .command('oss_upload_dir')
     .description('上传文件夹到阿里云 OSS')
     .option('-l, --local_dir <string>', '本地目录', './public')

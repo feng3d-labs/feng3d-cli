@@ -5,27 +5,24 @@ feng3d 命令行工具，包含项目规范、配置模板、OSS 上传等功能
 - 📋 统一的代码规范（ESLint 配置）
 - 📦 统一的依赖版本管理
 - 🛠️ CLI 工具支持创建和更新项目
-- 📝 项目模板（.gitignore, .cursorrules, tsconfig.json 等）
+- 📝 项目模板（LICENSE, .gitignore, .cursorrules, tsconfig.json, vite.config.js 等）
+- 🔄 GitHub Actions 工作流模板
 - 📤 阿里云 OSS 文件上传
 
-## 安装
+## 使用方式
+
+推荐使用 `npx` 直接运行，无需安装：
 
 ```bash
-npm install -g feng3d-cli
+npx feng3d-cli <command>
 ```
 
-或作为开发依赖：
-
-```bash
-npm install -D feng3d-cli
-```
-
-## CLI 使用
+## CLI 命令
 
 ### 创建新项目
 
 ```bash
-feng3d-cli create my-project
+npx feng3d-cli create my-project
 ```
 
 选项：
@@ -36,66 +33,90 @@ feng3d-cli create my-project
 ### 更新现有项目
 
 ```bash
-feng3d-cli update
+npx feng3d-cli update
 ```
 
 选项：
 - `-d, --directory <dir>` - 项目目录（默认：当前目录）
+- `--all` - 更新所有配置
+- `--config` - 仅更新 feng3d.json 配置
 - `--eslint` - 仅更新 ESLint 配置
 - `--gitignore` - 仅更新 .gitignore
 - `--cursorrules` - 仅更新 .cursorrules
+- `--license` - 仅更新 LICENSE 文件
+- `--vscode` - 仅更新 .vscode/settings.json
+- `--tsconfig` - 仅更新 tsconfig.json
+- `--vite` - 仅更新 vite.config.js
+- `--typedoc` - 仅更新 typedoc.json
 - `--deps` - 仅更新依赖版本
-- `--all` - 更新所有配置
+- `--husky` - 仅更新 husky pre-commit hook
+- `--publish` - 仅更新 npm publish workflow
+- `--pages` - 仅更新 GitHub Pages workflow
+- `--pull-request` - 仅更新 Pull Request CI workflow
+- `--test` - 仅更新 test/_.test.ts
 
 ### 上传到阿里云 OSS
 
 ```bash
-feng3d-cli oss_upload_dir                           # 上传 ./public 目录
-feng3d-cli oss_upload_dir -l ./dist                 # 指定本地目录
-feng3d-cli oss_upload_dir -l ./public -o my-project # 指定 OSS 目录
+npx feng3d-cli oss_upload_dir                           # 上传 ./public 目录
+npx feng3d-cli oss_upload_dir -l ./dist                 # 指定本地目录
+npx feng3d-cli oss_upload_dir -l ./public -o my-project # 指定 OSS 目录
 ```
 
 选项：
 - `-l, --local_dir <dir>` - 本地目录（默认：./public）
 - `-o, --oss_dir <dir>` - OSS 目录（默认：从 package.json 的 name 获取）
 
-> 注意：需要在 `C:/Users/Administrator/oss_config.json` 配置 OSS 访问密钥
+> 注意：需要在用户目录下创建 `oss_config.json` 配置 OSS 访问密钥（如 `~/oss_config.json`）
+>
+> 配置文件格式：
+> ```json
+> {
+>   "region": "oss-cn-hangzhou",
+>   "accessKeyId": "your-access-key-id",
+>   "accessKeySecret": "your-access-key-secret",
+>   "bucket": "your-bucket-name"
+> }
+> ```
 
 ## 编程使用
 
-### 获取统一版本
-
-```typescript
-import { VERSIONS, getDevDependencies } from 'feng3d-cli';
-
-// 获取特定依赖版本
-console.log(VERSIONS.typescript); // '5.8.3'
-console.log(VERSIONS.vitest);     // '^3.1.3'
-
-// 获取完整的 devDependencies
-const deps = getDevDependencies({
-    includeVitest: true,
-    includeCoverage: true,
-    includeTypedoc: true,
-});
-```
-
-### 使用模板
-
 ```typescript
 import {
+    // 版本管理
+    VERSIONS,
+    getDevDependencies,
+    // 模板
     gitignoreTemplate,
     cursorrrulesTemplate,
-    tsconfigTemplate,
-    createTypedocConfig,
+    getTypedocConfig,
+    getLicenseTemplate,
+    getVscodeSettingsTemplate,
+    getTsconfigTemplate,
+    getViteConfigTemplate,
+    // 项目操作
+    createProject,
+    updateProject,
+    ossUploadDir,
 } from 'feng3d-cli';
-
-// 创建 typedoc 配置
-const config = createTypedocConfig({
-    name: '@feng3d/my-package',
-    repoName: 'my-package',
-});
 ```
+
+## 模板文件
+
+| 文件 | 说明 |
+|------|------|
+| LICENSE | MIT 许可证（中文） |
+| .gitignore | Git 忽略规则 |
+| .cursorrules | Cursor AI 规则 |
+| tsconfig.json | TypeScript 配置 |
+| vite.config.js | Vite 构建配置 |
+| eslint.config.js | ESLint 配置 |
+| typedoc.json | TypeDoc 配置 |
+| .vscode/settings.json | VS Code 设置 |
+| .husky/pre-commit | Git pre-commit hook |
+| .github/workflows/*.yml | GitHub Actions 工作流 |
+| scripts/prepublish.js | 发布前脚本 |
+| scripts/postpublish.js | 发布后脚本 |
 
 ## 统一版本
 
@@ -128,4 +149,3 @@ const config = createTypedocConfig({
 ## 许可证
 
 MIT
-

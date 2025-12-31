@@ -4,10 +4,11 @@
 
 import OSS from 'ali-oss';
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 
-// 定义 JSON 配置文件的路径
-const configPath = 'C:/Users/Administrator/oss_config.json';
+// 定义 JSON 配置文件的路径（用户目录下的 oss_config.json）
+const configPath = path.join(os.homedir(), 'oss_config.json');
 
 /**
  * 将本地目录中的所有文件上传到指定的 OSS 目录中。
