@@ -1,37 +1,33 @@
 /**
  * feng3d 项目统一依赖版本
+ * 从 templates/package.json 中读取
  */
-export const VERSIONS = {
-    // TypeScript 相关
-    typescript: '5.8.3',
-    tslib: '^2.8.1',
 
-    // ESLint 相关
-    eslint: '9.26.0',
-    '@eslint/js': '^9.0.0',
-    '@typescript-eslint/eslint-plugin': '8.32.1',
-    '@typescript-eslint/parser': '8.32.1',
-    'typescript-eslint': '^8.32.1',
-    globals: '^14.0.0',
+import fs from 'fs-extra';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-    // 测试相关
-    vitest: '^3.1.3',
-    '@vitest/coverage-v8': '^3.2.4',
-    'happy-dom': '^20.0.11',
+/**
+ * 模板目录路径
+ */
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const TEMPLATES_DIR = path.resolve(__dirname, '../templates');
 
-    // 构建工具
-    vite: '^6.3.5',
-    rimraf: '6.0.1',
-    'cross-env': '7.0.3',
-    concurrently: '^9.1.2',
+/**
+ * 从模板 package.json 中读取 devDependencies
+ */
+function loadVersionsFromTemplate(): Record<string, string>
+{
+    const packageJsonPath = path.join(TEMPLATES_DIR, 'package.json');
+    const packageJson = fs.readJsonSync(packageJsonPath);
 
-    // 文档
-    typedoc: '^0.28.4',
+    return packageJson.devDependencies || {};
+}
 
-    // Git hooks
-    husky: '^9.1.7',
-    'lint-staged': '^15.2.10',
-} as const;
+/**
+ * 统一依赖版本（从 templates/package.json 读取）
+ */
+export const VERSIONS = loadVersionsFromTemplate();
 
 /**
  * 获取 devDependencies 配置
@@ -42,40 +38,25 @@ export function getDevDependencies(options: {
     includeCoverage?: boolean;
 } = {}): Record<string, string>
 {
-    const deps: Record<string, string> = {
-        '@eslint/js': VERSIONS['@eslint/js'],
-        '@typescript-eslint/eslint-plugin': VERSIONS['@typescript-eslint/eslint-plugin'],
-        '@typescript-eslint/parser': VERSIONS['@typescript-eslint/parser'],
-        concurrently: VERSIONS.concurrently,
-        'cross-env': VERSIONS['cross-env'],
-        eslint: VERSIONS.eslint,
-        globals: VERSIONS.globals,
-        rimraf: VERSIONS.rimraf,
-        tslib: VERSIONS.tslib,
-        typescript: VERSIONS.typescript,
-        'typescript-eslint': VERSIONS['typescript-eslint'],
-        vite: VERSIONS.vite,
-    };
+    // 从 VERSIONS 中复制所有依赖
+    const deps: Record<string, string> = { ...VERSIONS };
 
-    if (options.includeVitest !== false)
+    // 根据选项移除可选依赖
+    if (options.includeVitest === false)
     {
-        deps.vitest = VERSIONS.vitest;
+        delete deps.vitest;
     }
 
-    if (options.includeCoverage)
+    if (options.includeTypedoc === false)
     {
-        deps['@vitest/coverage-v8'] = VERSIONS['@vitest/coverage-v8'];
+        delete deps.typedoc;
     }
 
-    if (options.includeTypedoc !== false)
+    // 可选添加覆盖率依赖（默认不包含）
+    if (options.includeCoverage && !deps['@vitest/coverage-v8'])
     {
-        deps.typedoc = VERSIONS.typedoc;
+        deps['@vitest/coverage-v8'] = '^3.2.4';
     }
-
-    // 默认包含 husky 和 lint-staged
-    deps.husky = VERSIONS.husky;
-    deps['lint-staged'] = VERSIONS['lint-staged'];
 
     return deps;
 }
-
