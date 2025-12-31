@@ -22,9 +22,8 @@
   "scripts": {
     "clean": "rimraf lib dist public",
     "build": "vite build && tsc",
-    "watch": "vite build --watch",
+    "watch": "concurrently \"vite build --watch\" \"tsc -w\" \"vitest\"",
     "test": "vitest run",
-    "test:watch": "vitest",
     "lint": "eslint . --ext .js,.ts --max-warnings 0",
     "lintfix": "npm run lint -- --fix",
     "docs": "typedoc",
@@ -73,7 +72,8 @@
     "typescript-eslint": "^8.32.1",
     "vite": "^6.3.5",
     "vitest": "^3.1.3",
-    "cross-env": "7.0.3"
+    "cross-env": "7.0.3",
+    "concurrently": "^9.1.2"
   },
   "lint-staged": {
     "*.{js,ts}": [

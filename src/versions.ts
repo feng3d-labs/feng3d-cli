@@ -23,6 +23,7 @@ export const VERSIONS = {
     vite: '^6.3.5',
     rimraf: '6.0.1',
     'cross-env': '7.0.3',
+    concurrently: '^9.1.2',
 
     // 文档
     typedoc: '^0.28.4',
@@ -45,6 +46,7 @@ export function getDevDependencies(options: {
         '@eslint/js': VERSIONS['@eslint/js'],
         '@typescript-eslint/eslint-plugin': VERSIONS['@typescript-eslint/eslint-plugin'],
         '@typescript-eslint/parser': VERSIONS['@typescript-eslint/parser'],
+        concurrently: VERSIONS.concurrently,
         'cross-env': VERSIONS['cross-env'],
         eslint: VERSIONS.eslint,
         globals: VERSIONS.globals,

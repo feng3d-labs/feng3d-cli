@@ -558,6 +558,8 @@ async function updateDependencies(projectDir: string, config: Feng3dConfig): Pro
     const standardScripts: Record<string, string> = {
         clean: 'rimraf lib dist public',
         build: 'vite build && tsc',
+        watch: 'concurrently "vite build --watch" "tsc -w" "vitest"',
+        test: 'vitest run',
         lint: 'eslint . --ext .js,.ts --max-warnings 0',
         lintfix: 'npm run lint -- --fix',
         docs: 'typedoc',
@@ -565,7 +567,7 @@ async function updateDependencies(projectDir: string, config: Feng3dConfig): Pro
         update: 'npx feng3d-cli update && npm install',
         postinstall: 'npx feng3d-cli update || exit 0',
         prepublishOnly: 'node scripts/prepublish.js',
-        release: 'npm run clean && npm run lint && npm run build && npm run docs && npm publish',
+        release: 'npm run clean && npm run lint && npm test && npm run build && npm run docs && npm publish',
         postpublish: 'node scripts/postpublish.js',
     };
 
@@ -577,6 +579,44 @@ async function updateDependencies(projectDir: string, config: Feng3dConfig): Pro
             updated = true;
             console.log(chalk.gray(`  添加: scripts.${key}`));
         }
+    }
+
+    // 设置标准入口点配置（配合 prepublish/postpublish 脚本使用，仅在不存在时添加）
+    if (!packageJson.type)
+    {
+        packageJson.type = 'module';
+        updated = true;
+        console.log(chalk.gray('  添加: type = "module"'));
+    }
+
+    const entryPoints = {
+        main: './src/index.ts',
+        types: './src/index.ts',
+        module: './src/index.ts',
+    };
+
+    for (const [key, value] of Object.entries(entryPoints))
+    {
+        if (!(key in packageJson))
+        {
+            packageJson[key] = value;
+            updated = true;
+            console.log(chalk.gray(`  添加: ${key} = "${value}"`));
+        }
+    }
+
+    // 设置 exports 配置（仅在不存在时添加）
+    if (!packageJson.exports)
+    {
+        packageJson.exports = {
+            '.': {
+                types: './src/index.ts',
+                import: './src/index.ts',
+                require: './src/index.ts',
+            },
+        };
+        updated = true;
+        console.log(chalk.gray('  添加: exports'));
     }
 
     // 只有在有更新时才写入文件
