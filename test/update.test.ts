@@ -209,64 +209,32 @@ describe('feng3d-cli update', () =>
             expect(content).toBe(customLicense);
         });
 
-        test('tsconfig.json 在 .gitignore 中时可被覆盖', async () =>
+        test('tsconfig.json 已存在时不被覆盖', async () =>
         {
             const customTsconfig = { compilerOptions: { target: 'ES5' } };
 
             await createPackageJson(tempDir);
             await fs.writeJson(path.join(tempDir, 'tsconfig.json'), customTsconfig);
-            await fs.writeFile(path.join(tempDir, '.gitignore'), 'tsconfig.json\n');
 
             await updateProject(tempDir);
 
             const content = await fs.readJson(path.join(tempDir, 'tsconfig.json'));
 
-            // 在 .gitignore 中的文件应该被覆盖为模板内容
-            expect(content.compilerOptions.target).toBe('ESNext');
-        });
-
-        test('tsconfig.json 不在 .gitignore 中时不被覆盖', async () =>
-        {
-            const customTsconfig = { compilerOptions: { target: 'ES5' } };
-
-            await createPackageJson(tempDir);
-            await fs.writeJson(path.join(tempDir, 'tsconfig.json'), customTsconfig);
-            await fs.writeFile(path.join(tempDir, '.gitignore'), '# Empty\n');
-
-            await updateProject(tempDir);
-
-            const content = await fs.readJson(path.join(tempDir, 'tsconfig.json'));
-
-            // 不在 .gitignore 中的文件不应被覆盖
+            // 已存在的文件不应被覆盖
             expect(content.compilerOptions.target).toBe('ES5');
         });
 
-        test('vite.config.js 不在 .gitignore 中时不被覆盖', async () =>
+        test('vite.config.js 已存在时不被覆盖', async () =>
         {
             await createPackageJson(tempDir);
             await fs.writeFile(path.join(tempDir, 'vite.config.js'), '// Custom config');
-            await fs.writeFile(path.join(tempDir, '.gitignore'), '# Empty\n');
 
             await updateProject(tempDir);
 
             const content = await fs.readFile(path.join(tempDir, 'vite.config.js'), 'utf-8');
 
-            // 不在 .gitignore 中的文件不应被覆盖
+            // 已存在的文件不应被覆盖
             expect(content).toBe('// Custom config');
-        });
-
-        test('vite.config.js 在 .gitignore 中时被覆盖', async () =>
-        {
-            await createPackageJson(tempDir);
-            await fs.writeFile(path.join(tempDir, 'vite.config.js'), '// Custom config');
-            await fs.writeFile(path.join(tempDir, '.gitignore'), 'vite.config.js\n');
-
-            await updateProject(tempDir);
-
-            const content = await fs.readFile(path.join(tempDir, 'vite.config.js'), 'utf-8');
-
-            // 在 .gitignore 中的文件应被覆盖为模板内容
-            expect(content).toContain('defineConfig');
         });
     });
 

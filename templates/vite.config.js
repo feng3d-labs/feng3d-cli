@@ -9,6 +9,7 @@ const external = pkg.standalone ? [] : Object.keys(pkg.dependencies || []);
 const globals = () => namespace;
 
 export default defineConfig({
+    publicDir: false,
     build: {
         lib: {
             // Could also be a dictionary or array of multiple entry points

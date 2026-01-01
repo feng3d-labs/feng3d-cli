@@ -33,25 +33,6 @@ interface TemplateContext {
 }
 
 /**
- * 检查文件是否在 .gitignore 的自动生成文件列表中
- */
-async function isFileInGitignore(projectDir: string, filePath: string): Promise<boolean>
-{
-    const gitignorePath = path.join(projectDir, '.gitignore');
-
-    if (!await fs.pathExists(gitignorePath))
-    {
-        return false;
-    }
-
-    const gitignoreContent = await fs.readFile(gitignorePath, 'utf-8');
-    const escapedPath = filePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`^${escapedPath}$`, 'm');
-
-    return regex.test(gitignoreContent);
-}
-
-/**
  * 更新项目的规范配置
  * @param directory 项目目录路径
  */
@@ -171,37 +152,35 @@ export async function updateProject(directory: string = '.'): Promise<void>
     await fs.writeFile(path.join(projectDir, '.vscode/settings.json'), getVscodeSettingsTemplate());
     console.log(chalk.gray('  更新: .vscode/settings.json'));
 
-    // 更新 tsconfig.json（仅在忽略列表中时覆盖，feng3d-cli 跳过）
+    // 更新 tsconfig.json（仅在不存在时创建，feng3d-cli 跳过）
     if (!isFeng3dCli)
     {
         const tsconfigPath = path.join(projectDir, 'tsconfig.json');
-        const isIgnored = await isFileInGitignore(projectDir, 'tsconfig.json');
 
-        if (isIgnored || !await fs.pathExists(tsconfigPath))
+        if (!await fs.pathExists(tsconfigPath))
         {
             await fs.writeFile(tsconfigPath, getTsconfigTemplateString());
-            console.log(chalk.gray(isIgnored ? '  覆盖: tsconfig.json（在忽略列表中）' : '  创建: tsconfig.json'));
+            console.log(chalk.gray('  创建: tsconfig.json'));
         }
         else
         {
-            console.log(chalk.gray('  跳过: tsconfig.json（已存在且不在忽略列表中）'));
+            console.log(chalk.gray('  跳过: tsconfig.json（已存在）'));
         }
     }
 
-    // 更新 vite.config.js（仅在忽略列表中时覆盖，feng3d-cli 跳过）
+    // 更新 vite.config.js（仅在不存在时创建，feng3d-cli 跳过）
     if (!isFeng3dCli)
     {
         const viteConfigPath = path.join(projectDir, 'vite.config.js');
-        const isIgnored = await isFileInGitignore(projectDir, 'vite.config.js');
 
-        if (isIgnored || !await fs.pathExists(viteConfigPath))
+        if (!await fs.pathExists(viteConfigPath))
         {
             await fs.writeFile(viteConfigPath, getViteConfigTemplate());
-            console.log(chalk.gray(isIgnored ? '  覆盖: vite.config.js（在忽略列表中）' : '  创建: vite.config.js'));
+            console.log(chalk.gray('  创建: vite.config.js'));
         }
         else
         {
-            console.log(chalk.gray('  跳过: vite.config.js（已存在且不在忽略列表中）'));
+            console.log(chalk.gray('  跳过: vite.config.js（已存在）'));
         }
     }
 
