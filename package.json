@@ -46,8 +46,7 @@
     "bin",
     "dist",
     "lib",
-    "templates",
-    "schemas"
+    "templates"
   ],
   "dependencies": {
     "ali-oss": "^6.22.0",

@@ -12,7 +12,6 @@ import {
     getTsconfigTemplate,
     getTypedocConfig,
     getPublishWorkflowTemplate,
-    getFeng3dConfigTemplate,
     getPrepublishScriptTemplate,
     getPostpublishScriptTemplate,
 } from '../templates.js';
@@ -104,10 +103,6 @@ export async function createProject(name: string, options: CreateOptions): Promi
     await fs.writeFile(path.join(projectDir, 'scripts/postpublish.js'), getPostpublishScriptTemplate());
     console.log(chalk.gray('  创建: scripts/prepublish.js'));
     console.log(chalk.gray('  创建: scripts/postpublish.js'));
-
-    // 创建 feng3d.json 配置文件
-    await fs.writeJson(path.join(projectDir, 'feng3d.json'), getFeng3dConfigTemplate({ name }), { spaces: 4 });
-    console.log(chalk.gray('  创建: feng3d.json'));
 }
 
 /**

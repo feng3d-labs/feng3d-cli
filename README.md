@@ -34,26 +34,10 @@ npx feng3d-cli create my-project
 
 ```bash
 npx feng3d-cli update
+npx feng3d-cli update -d ./my-project  # 指定项目目录
 ```
 
-选项：
-- `-d, --directory <dir>` - 项目目录（默认：当前目录）
-- `--all` - 更新所有配置
-- `--config` - 仅更新 feng3d.json 配置
-- `--eslint` - 仅更新 ESLint 配置
-- `--gitignore` - 仅更新 .gitignore
-- `--cursorrules` - 仅更新 .cursorrules
-- `--license` - 仅更新 LICENSE 文件
-- `--vscode` - 仅更新 .vscode/settings.json
-- `--tsconfig` - 仅更新 tsconfig.json
-- `--vite` - 仅更新 vite.config.js
-- `--typedoc` - 仅更新 typedoc.json
-- `--deps` - 仅更新依赖版本
-- `--husky` - 仅更新 husky pre-commit hook
-- `--publish` - 仅更新 npm publish workflow
-- `--pages` - 仅更新 GitHub Pages workflow
-- `--pull-request` - 仅更新 Pull Request CI workflow
-- `--test` - 仅更新 test/_.test.ts
+更新项目的所有规范配置文件，包括 ESLint、TypeScript、Vite、GitHub Actions 等。
 
 ### 上传到阿里云 OSS
 

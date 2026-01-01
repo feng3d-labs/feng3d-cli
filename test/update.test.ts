@@ -58,7 +58,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject({ directory: tempDir, all: true });
+            await updateProject(tempDir);
 
             // 检查文件是否创建
             expect(await fs.pathExists(path.join(tempDir, '.gitignore'))).toBe(true);
@@ -72,13 +72,16 @@ describe('feng3d-cli update', () =>
             expect(await fs.pathExists(path.join(tempDir, 'scripts/prepublish.js'))).toBe(true);
             expect(await fs.pathExists(path.join(tempDir, 'scripts/postpublish.js'))).toBe(true);
             expect(await fs.pathExists(path.join(tempDir, '.husky/pre-commit'))).toBe(true);
+            expect(await fs.pathExists(path.join(tempDir, '.github/workflows/publish.yml'))).toBe(true);
+            expect(await fs.pathExists(path.join(tempDir, '.github/workflows/pages.yml'))).toBe(true);
+            expect(await fs.pathExists(path.join(tempDir, '.github/workflows/pull-request.yml'))).toBe(true);
         });
 
         test('无效目录应抛出错误', async () =>
         {
             const invalidDir = path.join(tempDir, 'nonexistent');
 
-            await expect(updateProject({ directory: invalidDir })).rejects.toThrow('不是有效的项目目录');
+            await expect(updateProject(invalidDir)).rejects.toThrow('不是有效的项目目录');
         });
     });
 
@@ -88,7 +91,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir, { scripts: {} });
 
-            await updateProject({ directory: tempDir, deps: true });
+            await updateProject(tempDir);
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
@@ -113,7 +116,7 @@ describe('feng3d-cli update', () =>
                 },
             });
 
-            await updateProject({ directory: tempDir, deps: true });
+            await updateProject(tempDir);
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
@@ -128,7 +131,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject({ directory: tempDir, deps: true });
+            await updateProject(tempDir);
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
@@ -143,7 +146,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject({ directory: tempDir, deps: true });
+            await updateProject(tempDir);
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
@@ -163,7 +166,7 @@ describe('feng3d-cli update', () =>
                 exports: { '.': './lib/index.js' },
             });
 
-            await updateProject({ directory: tempDir, deps: true });
+            await updateProject(tempDir);
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
@@ -177,20 +180,19 @@ describe('feng3d-cli update', () =>
 
     describe('文件创建与覆盖', () =>
     {
-        test('.gitignore 仅在不存在时创建（但会追加自动生成文件列表）', async () =>
+        test('.gitignore 仅在不存在时创建', async () =>
         {
             const customGitignore = '# Custom gitignore\nnode_modules/\n';
 
             await createPackageJson(tempDir);
             await fs.writeFile(path.join(tempDir, '.gitignore'), customGitignore);
 
-            await updateProject({ directory: tempDir, gitignore: true });
+            await updateProject(tempDir);
 
             const content = await fs.readFile(path.join(tempDir, '.gitignore'), 'utf-8');
 
-            // .gitignore 应该保留自定义内容
-            expect(content).toContain('# Custom gitignore');
-            expect(content).toContain('node_modules/');
+            // .gitignore 应该完全保留自定义内容
+            expect(content).toBe(customGitignore);
         });
 
         test('LICENSE 仅在不存在时创建', async () =>
@@ -200,7 +202,7 @@ describe('feng3d-cli update', () =>
             await createPackageJson(tempDir);
             await fs.writeFile(path.join(tempDir, 'LICENSE'), customLicense);
 
-            await updateProject({ directory: tempDir, license: true });
+            await updateProject(tempDir);
 
             const content = await fs.readFile(path.join(tempDir, 'LICENSE'), 'utf-8');
 
@@ -215,7 +217,7 @@ describe('feng3d-cli update', () =>
             await fs.writeJson(path.join(tempDir, 'tsconfig.json'), customTsconfig);
             await fs.writeFile(path.join(tempDir, '.gitignore'), 'tsconfig.json\n');
 
-            await updateProject({ directory: tempDir, tsconfig: true });
+            await updateProject(tempDir);
 
             const content = await fs.readJson(path.join(tempDir, 'tsconfig.json'));
 
@@ -231,7 +233,7 @@ describe('feng3d-cli update', () =>
             await fs.writeJson(path.join(tempDir, 'tsconfig.json'), customTsconfig);
             await fs.writeFile(path.join(tempDir, '.gitignore'), '# Empty\n');
 
-            await updateProject({ directory: tempDir, tsconfig: true });
+            await updateProject(tempDir);
 
             const content = await fs.readJson(path.join(tempDir, 'tsconfig.json'));
 
@@ -242,12 +244,10 @@ describe('feng3d-cli update', () =>
         test('vite.config.js 不在 .gitignore 中时不被覆盖', async () =>
         {
             await createPackageJson(tempDir);
-            // 手动创建自定义 vite.config.js
             await fs.writeFile(path.join(tempDir, 'vite.config.js'), '// Custom config');
-            // 创建空的 .gitignore（不包含 vite.config.js）
             await fs.writeFile(path.join(tempDir, '.gitignore'), '# Empty\n');
 
-            await updateProject({ directory: tempDir, vite: true });
+            await updateProject(tempDir);
 
             const content = await fs.readFile(path.join(tempDir, 'vite.config.js'), 'utf-8');
 
@@ -258,12 +258,10 @@ describe('feng3d-cli update', () =>
         test('vite.config.js 在 .gitignore 中时被覆盖', async () =>
         {
             await createPackageJson(tempDir);
-            // 手动创建自定义 vite.config.js
             await fs.writeFile(path.join(tempDir, 'vite.config.js'), '// Custom config');
-            // .gitignore 包含 vite.config.js
             await fs.writeFile(path.join(tempDir, '.gitignore'), 'vite.config.js\n');
 
-            await updateProject({ directory: tempDir, vite: true });
+            await updateProject(tempDir);
 
             const content = await fs.readFile(path.join(tempDir, 'vite.config.js'), 'utf-8');
 
@@ -278,7 +276,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject({ directory: tempDir, all: true });
+            await updateProject(tempDir);
 
             expect(await fs.pathExists(path.join(tempDir, 'scripts/prepublish.js'))).toBe(true);
             expect(await fs.pathExists(path.join(tempDir, 'scripts/postpublish.js'))).toBe(true);
@@ -298,7 +296,7 @@ describe('feng3d-cli update', () =>
             await fs.ensureDir(path.join(tempDir, 'scripts'));
             await fs.writeFile(path.join(tempDir, 'scripts/prepublish.js'), customScript);
 
-            await updateProject({ directory: tempDir, all: true });
+            await updateProject(tempDir);
 
             const content = await fs.readFile(path.join(tempDir, 'scripts/prepublish.js'), 'utf-8');
 
@@ -312,7 +310,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject({ directory: tempDir, husky: true });
+            await updateProject(tempDir);
 
             expect(await fs.pathExists(path.join(tempDir, '.husky/pre-commit'))).toBe(true);
 
@@ -325,7 +323,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject({ directory: tempDir, husky: true });
+            await updateProject(tempDir);
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
@@ -336,96 +334,15 @@ describe('feng3d-cli update', () =>
 
     describe('GitHub Actions', () =>
     {
-        test('创建 publish workflow', async () =>
+        test('创建所有 workflow 文件', async () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject({ directory: tempDir, publish: true });
+            await updateProject(tempDir);
 
             expect(await fs.pathExists(path.join(tempDir, '.github/workflows/publish.yml'))).toBe(true);
-        });
-
-        test('创建 pages workflow', async () =>
-        {
-            await createPackageJson(tempDir);
-
-            await updateProject({ directory: tempDir, pages: true });
-
             expect(await fs.pathExists(path.join(tempDir, '.github/workflows/pages.yml'))).toBe(true);
-        });
-
-        test('创建 pull-request workflow', async () =>
-        {
-            await createPackageJson(tempDir);
-
-            await updateProject({ directory: tempDir, pullRequest: true });
-
             expect(await fs.pathExists(path.join(tempDir, '.github/workflows/pull-request.yml'))).toBe(true);
         });
     });
-
-    describe('feng3d.json 配置', () =>
-    {
-        test('创建 feng3d.json 配置文件', async () =>
-        {
-            await createPackageJson(tempDir);
-
-            await updateProject({ directory: tempDir, config: true });
-
-            expect(await fs.pathExists(path.join(tempDir, 'feng3d.json'))).toBe(true);
-
-            const config = await fs.readJson(path.join(tempDir, 'feng3d.json'));
-
-            expect(config.name).toBe('test-project');
-        });
-    });
-
-    describe('选项控制', () =>
-    {
-        test('--eslint 仅更新 ESLint 配置', async () =>
-        {
-            await createPackageJson(tempDir);
-
-            await updateProject({ directory: tempDir, eslint: true });
-
-            expect(await fs.pathExists(path.join(tempDir, 'eslint.config.js'))).toBe(true);
-            // 其他文件不应创建
-            expect(await fs.pathExists(path.join(tempDir, 'LICENSE'))).toBe(false);
-        });
-
-        test('--license 仅更新 LICENSE', async () =>
-        {
-            await createPackageJson(tempDir);
-
-            await updateProject({ directory: tempDir, license: true });
-
-            expect(await fs.pathExists(path.join(tempDir, 'LICENSE'))).toBe(true);
-            // 其他文件不应创建
-            expect(await fs.pathExists(path.join(tempDir, 'eslint.config.js'))).toBe(false);
-        });
-
-        test('--typedoc 仅更新 typedoc.json', async () =>
-        {
-            await createPackageJson(tempDir);
-
-            await updateProject({ directory: tempDir, typedoc: true });
-
-            expect(await fs.pathExists(path.join(tempDir, 'typedoc.json'))).toBe(true);
-        });
-
-        test('--all 更新所有配置', async () =>
-        {
-            await createPackageJson(tempDir);
-
-            await updateProject({ directory: tempDir, all: true });
-
-            // 所有主要文件都应创建
-            expect(await fs.pathExists(path.join(tempDir, '.gitignore'))).toBe(true);
-            expect(await fs.pathExists(path.join(tempDir, '.cursorrules'))).toBe(true);
-            expect(await fs.pathExists(path.join(tempDir, 'eslint.config.js'))).toBe(true);
-            expect(await fs.pathExists(path.join(tempDir, 'LICENSE'))).toBe(true);
-            expect(await fs.pathExists(path.join(tempDir, '.github/workflows/publish.yml'))).toBe(true);
-        });
-    });
 });
-

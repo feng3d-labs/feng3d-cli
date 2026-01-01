@@ -41,28 +41,12 @@ program
     .command('update')
     .description('更新当前项目的规范配置')
     .option('-d, --directory <dir>', '项目目录', '.')
-    .option('--config', '仅更新 feng3d.json 配置')
-    .option('--eslint', '仅更新 ESLint 配置')
-    .option('--gitignore', '仅更新 .gitignore')
-    .option('--cursorrules', '仅更新 .cursorrules')
-    .option('--publish', '仅更新 npm publish workflow')
-    .option('--pages', '仅更新 GitHub Pages workflow')
-    .option('--pull-request', '仅更新 Pull Request CI workflow')
-    .option('--typedoc', '仅更新 typedoc.json')
-    .option('--test', '仅更新 test/_.test.ts')
-    .option('--deps', '仅更新依赖版本')
-    .option('--husky', '仅更新 husky pre-commit hook')
-    .option('--license', '仅更新 LICENSE 文件')
-    .option('--vscode', '仅更新 .vscode/settings.json')
-    .option('--tsconfig', '仅更新 tsconfig.json')
-    .option('--vite', '仅更新 vite.config.js')
-    .option('--all', '更新所有配置')
     .action(async (options) =>
     {
         console.log(chalk.blue('\n🔄 更新项目规范配置\n'));
         try
         {
-            await updateProject(options);
+            await updateProject(options.directory);
             console.log(chalk.green('\n✅ 规范配置更新成功！\n'));
         }
         catch (error)
