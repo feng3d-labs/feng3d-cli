@@ -159,6 +159,14 @@ export function getPostpublishScriptTemplate(): string
 }
 
 /**
+ * 获取 scripts/postdocs.js 模板内容
+ */
+export function getPostdocsScriptTemplate(): string
+{
+    return fs.readFileSync(path.join(TEMPLATES_DIR, 'scripts/postdocs.js'), 'utf-8');
+}
+
+/**
  * 获取 src/index.ts 模板内容
  */
 export function getSrcIndexTemplate(options: { name: string }): string

@@ -22,6 +22,7 @@ import {
     getViteConfigTemplate,
     getPrepublishScriptTemplate,
     getPostpublishScriptTemplate,
+    getPostdocsScriptTemplate,
     getSrcIndexTemplate,
 } from '../templates.js';
 
@@ -218,6 +219,20 @@ export async function updateProject(directory: string = '.'): Promise<void>
         await fs.writeFile(postpublishPath, getPostpublishScriptTemplate());
         console.log(chalk.gray('  创建: scripts/postpublish.js'));
     }
+
+    // 如果存在 examples 目录，创建 postdocs.js 脚本
+    const examplesDir = path.join(projectDir, 'examples');
+    const postdocsPath = path.join(scriptsDir, 'postdocs.js');
+
+    if (await fs.pathExists(examplesDir))
+    {
+        if (!await fs.pathExists(postdocsPath))
+        {
+            await fs.ensureDir(scriptsDir);
+            await fs.writeFile(postdocsPath, getPostdocsScriptTemplate());
+            console.log(chalk.gray('  创建: scripts/postdocs.js'));
+        }
+    }
 }
 
 /**
@@ -268,6 +283,9 @@ const PACKAGE_JSON_FIELD_ORDER = [
  * scripts 字段的标准顺序
  */
 const SCRIPTS_ORDER = [
+    'examples:dev',
+    'test_web',
+    'postdocs',
     'clean',
     'build',
     'watch',
@@ -276,8 +294,6 @@ const SCRIPTS_ORDER = [
     'lintfix',
     'docs',
     'upload_oss',
-    'update',
-    'postinstall',
     'prepublishOnly',
     'release',
     'postpublish',
@@ -386,12 +402,19 @@ async function updateDependencies(projectDir: string): Promise<void>
         lintfix: 'npm run lint -- --fix',
         docs: 'typedoc',
         upload_oss: 'npm run docs && npx feng3d-cli oss_upload_dir',
-        update: 'npx feng3d-cli update && npm install',
-        postinstall: 'npx feng3d-cli update || exit 0',
         prepublishOnly: 'node scripts/prepublish.js',
         release: 'npm run clean && npm run lint && npm test && npm run build && npm run docs && npm publish',
         postpublish: 'node scripts/postpublish.js',
     };
+
+    // 检查是否存在 examples 目录，添加相关脚本
+    const examplesDir = path.join(projectDir, 'examples');
+
+    if (await fs.pathExists(examplesDir))
+    {
+        standardScripts['examples:dev'] = 'cd examples && npm run dev';
+        standardScripts.postdocs = 'node scripts/postdocs.js && cd examples && vite build --outDir ../public';
+    }
 
     for (const [key, value] of Object.entries(standardScripts))
     {

@@ -14,6 +14,7 @@ import {
     getPublishWorkflowTemplate,
     getPrepublishScriptTemplate,
     getPostpublishScriptTemplate,
+    getPostdocsScriptTemplate,
     getSrcIndexTemplate,
 } from '../templates.js';
 import { createEslintConfigFile } from './update.js';
@@ -104,6 +105,13 @@ export async function createProject(name: string, options: CreateOptions): Promi
     await fs.writeFile(path.join(projectDir, 'scripts/postpublish.js'), getPostpublishScriptTemplate());
     console.log(chalk.gray('  创建: scripts/prepublish.js'));
     console.log(chalk.gray('  创建: scripts/postpublish.js'));
+
+    // 如果创建了 examples 目录，添加 postdocs.js 脚本
+    if (options.examples !== false)
+    {
+        await fs.writeFile(path.join(projectDir, 'scripts/postdocs.js'), getPostdocsScriptTemplate());
+        console.log(chalk.gray('  创建: scripts/postdocs.js'));
+    }
 }
 
 /**
@@ -112,7 +120,6 @@ export async function createProject(name: string, options: CreateOptions): Promi
 function createPackageJson(name: string, options: CreateOptions): object
 {
     const scripts: Record<string, string> = {
-        dev: 'cd examples && npm run dev',
         clean: 'rimraf lib dist public',
         build: 'vite build && tsc',
         types: 'tsc',
@@ -124,6 +131,13 @@ function createPackageJson(name: string, options: CreateOptions): object
         prepublishOnly: 'node scripts/prepublish.js',
         postpublish: 'node scripts/postpublish.js',
     };
+
+    // 如果包含 examples 目录，添加相关脚本
+    if (options.examples !== false)
+    {
+        scripts['examples:dev'] = 'cd examples && npm run dev';
+        scripts.postdocs = 'node scripts/postdocs.js && cd examples && vite build --outDir ../public';
+    }
 
     if (options.vitest !== false)
     {
