@@ -22,6 +22,7 @@ import {
     getViteConfigTemplate,
     getPrepublishScriptTemplate,
     getPostpublishScriptTemplate,
+    getSrcIndexTemplate,
 } from '../templates.js';
 
 /**
@@ -39,13 +40,28 @@ interface TemplateContext {
 export async function updateProject(directory: string = '.'): Promise<void>
 {
     const projectDir = path.resolve(directory);
-
-    // 检查是否是有效的项目目录
     const packageJsonPath = path.join(projectDir, 'package.json');
 
+    // 如果 package.json 不存在，创建基础 package.json
     if (!await fs.pathExists(packageJsonPath))
     {
-        throw new Error(`${projectDir} 不是有效的项目目录（未找到 package.json）`);
+        await fs.ensureDir(projectDir);
+        const dirName = path.basename(projectDir);
+        const initialPackageJson = {
+            name: `@feng3d/${dirName}`,
+            version: '0.0.1',
+            description: '',
+        };
+
+        await fs.writeJson(packageJsonPath, initialPackageJson, { spaces: 4 });
+        console.log(chalk.gray('  创建: package.json'));
+
+        // 创建 src/index.ts
+        const srcDir = path.join(projectDir, 'src');
+
+        await fs.ensureDir(srcDir);
+        await fs.writeFile(path.join(srcDir, 'index.ts'), getSrcIndexTemplate({ name: `@feng3d/${dirName}` }));
+        console.log(chalk.gray('  创建: src/index.ts'));
     }
 
     // 获取项目信息用于模板
@@ -223,6 +239,96 @@ function detectIndent(content: string): string
 }
 
 /**
+ * package.json 字段的标准顺序
+ */
+const PACKAGE_JSON_FIELD_ORDER = [
+    'name',
+    'version',
+    'description',
+    'homepage',
+    'author',
+    'license',
+    'type',
+    'main',
+    'types',
+    'module',
+    'exports',
+    'bin',
+    'scripts',
+    'repository',
+    'publishConfig',
+    'files',
+    'devDependencies',
+    'dependencies',
+    'peerDependencies',
+    'lint-staged',
+];
+
+/**
+ * scripts 字段的标准顺序
+ */
+const SCRIPTS_ORDER = [
+    'clean',
+    'build',
+    'watch',
+    'test',
+    'lint',
+    'lintfix',
+    'docs',
+    'upload_oss',
+    'update',
+    'postinstall',
+    'prepublishOnly',
+    'release',
+    'postpublish',
+    'prepare',
+];
+
+/**
+ * 按标准顺序重新排列对象字段
+ */
+function reorderObject(obj: Record<string, unknown>, order: string[]): Record<string, unknown>
+{
+    const ordered: Record<string, unknown> = {};
+
+    // 先按标准顺序添加已存在的字段
+    for (const key of order)
+    {
+        if (key in obj)
+        {
+            ordered[key] = obj[key];
+        }
+    }
+
+    // 再添加其他未在标准顺序中的字段
+    for (const key of Object.keys(obj))
+    {
+        if (!(key in ordered))
+        {
+            ordered[key] = obj[key];
+        }
+    }
+
+    return ordered;
+}
+
+/**
+ * 按标准顺序重新排列 package.json 字段
+ */
+function reorderPackageJson(packageJson: Record<string, unknown>): Record<string, unknown>
+{
+    const ordered = reorderObject(packageJson, PACKAGE_JSON_FIELD_ORDER);
+
+    // 重新排列 scripts
+    if (ordered.scripts && typeof ordered.scripts === 'object')
+    {
+        ordered.scripts = reorderObject(ordered.scripts as Record<string, unknown>, SCRIPTS_ORDER);
+    }
+
+    return ordered;
+}
+
+/**
  * 更新 package.json 中的 devDependencies 版本
  */
 async function updateDependencies(projectDir: string): Promise<void>
@@ -338,7 +444,8 @@ async function updateDependencies(projectDir: string): Promise<void>
     // 只有在有更新时才写入文件
     if (updated)
     {
-        let newContent = JSON.stringify(packageJson, null, indent);
+        const orderedPackageJson = reorderPackageJson(packageJson);
+        let newContent = JSON.stringify(orderedPackageJson, null, indent);
 
         if (hasTrailingNewline)
         {
@@ -406,7 +513,8 @@ async function updateHuskyConfig(projectDir: string): Promise<void>
     // 只有在有更新时才写入文件
     if (updated)
     {
-        let newContent = JSON.stringify(packageJson, null, indent);
+        const orderedPackageJson = reorderPackageJson(packageJson);
+        let newContent = JSON.stringify(orderedPackageJson, null, indent);
 
         if (hasTrailingNewline)
         {

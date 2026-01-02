@@ -158,3 +158,13 @@ export function getPostpublishScriptTemplate(): string
     return fs.readFileSync(path.join(TEMPLATES_DIR, 'scripts/postpublish.js'), 'utf-8');
 }
 
+/**
+ * 获取 src/index.ts 模板内容
+ */
+export function getSrcIndexTemplate(options: { name: string }): string
+{
+    const template = fs.readFileSync(path.join(TEMPLATES_DIR, 'src/index.ts'), 'utf-8');
+
+    return template.replace(/\{\{name\}\}/g, options.name);
+}
+

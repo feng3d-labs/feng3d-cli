@@ -77,11 +77,26 @@ describe('feng3d-cli update', () =>
             expect(await fs.pathExists(path.join(tempDir, '.github/workflows/pull-request.yml'))).toBe(true);
         });
 
-        test('无效目录应抛出错误', async () =>
+        test('不存在 package.json 时自动创建项目', async () =>
         {
-            const invalidDir = path.join(tempDir, 'nonexistent');
+            const newProjectDir = path.join(tempDir, 'new-project');
 
-            await expect(updateProject(invalidDir)).rejects.toThrow('不是有效的项目目录');
+            await updateProject(newProjectDir);
+
+            // 应该创建 package.json
+            expect(await fs.pathExists(path.join(newProjectDir, 'package.json'))).toBe(true);
+            const packageJson = await fs.readJson(path.join(newProjectDir, 'package.json'));
+
+            expect(packageJson.name).toBe('@feng3d/new-project');
+            expect(packageJson.version).toBe('0.0.1');
+
+            // 应该创建 src/index.ts
+            expect(await fs.pathExists(path.join(newProjectDir, 'src/index.ts'))).toBe(true);
+
+            // 应该创建其他配置文件
+            expect(await fs.pathExists(path.join(newProjectDir, '.gitignore'))).toBe(true);
+            expect(await fs.pathExists(path.join(newProjectDir, 'tsconfig.json'))).toBe(true);
+            expect(await fs.pathExists(path.join(newProjectDir, 'vite.config.js'))).toBe(true);
         });
     });
 

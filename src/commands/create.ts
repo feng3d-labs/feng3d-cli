@@ -14,6 +14,7 @@ import {
     getPublishWorkflowTemplate,
     getPrepublishScriptTemplate,
     getPostpublishScriptTemplate,
+    getSrcIndexTemplate,
 } from '../templates.js';
 import { createEslintConfigFile } from './update.js';
 
@@ -71,7 +72,7 @@ export async function createProject(name: string, options: CreateOptions): Promi
     console.log(chalk.gray('  创建: typedoc.json'));
 
     // 创建 src/index.ts
-    await fs.writeFile(path.join(projectDir, 'src/index.ts'), `/**\n * @feng3d/${name}\n */\n\nexport {};\n`);
+    await fs.writeFile(path.join(projectDir, 'src/index.ts'), getSrcIndexTemplate({ name: `@feng3d/${name}` }));
     console.log(chalk.gray('  创建: src/index.ts'));
 
     // 创建 README.md
