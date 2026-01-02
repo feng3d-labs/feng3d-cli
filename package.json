@@ -1,6 +1,6 @@
 {
   "name": "feng3d-cli",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "feng3d 项目通用标准，包含代码规范、配置模板和 CLI 工具",
   "homepage": "https://feng3d.com/feng3d-cli/",
   "author": "feng",
@@ -27,8 +27,6 @@
     "lint": "eslint . --ext .js,.ts --max-warnings 0",
     "lintfix": "npm run lint -- --fix",
     "docs": "typedoc",
-    "upload_oss": "npm run build && npm run docs && node bin/cli.js oss_upload_dir",
-    "postinstall": "npm run build && node bin/cli.js update || exit 0",
     "update": "npm run build && node bin/cli.js update && npm install",
     "prepublishOnly": "node scripts/prepublish.js",
     "release": "npm run clean && npm run lint && npm test && npm run build && npm run docs && npm publish",
@@ -49,7 +47,6 @@
     "templates"
   ],
   "dependencies": {
-    "ali-oss": "^6.22.0",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "fs-extra": "^11.2.0"

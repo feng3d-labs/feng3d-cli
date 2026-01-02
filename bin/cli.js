@@ -4,10 +4,9 @@
  * feng3d 命令行工具，包含项目规范、OSS 上传等功能
  */
 
-import fs from 'fs';
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { createProject, updateProject, ossUploadDir } from '../dist/index.js';
+import { createProject, updateProject } from '../dist/index.js';
 
 const program = new Command();
 
@@ -52,55 +51,6 @@ program
         catch (error)
         {
             console.error(chalk.red(`\n❌ 更新失败: ${error}\n`));
-            process.exit(1);
-        }
-    });
-
-program
-    .command('oss_upload_dir')
-    .description('上传文件夹到阿里云 OSS')
-    .option('-l, --local_dir <string>', '本地目录', './public')
-    .option('-o, --oss_dir <string>', 'OSS 目录', '')
-    .action(async (options) =>
-    {
-        const localDir = options.local_dir;
-        let ossDir = options.oss_dir;
-
-        if (!fs.existsSync(localDir))
-        {
-            console.log(chalk.red(`\n❌ 本地目录 ${localDir} 不存在!\n`));
-
-            return;
-        }
-
-        if (!ossDir)
-        {
-            // 获取当前目录下 package.json 的 name 字段
-            try
-            {
-                const packageJson = fs.readFileSync('package.json', 'utf-8');
-                const packageJsonObj = JSON.parse(packageJson);
-
-                ossDir = packageJsonObj.name.split('/').pop();
-            }
-            catch
-            {
-                console.log(chalk.red('\n❌ 无法读取 package.json 获取项目名称\n'));
-
-                return;
-            }
-        }
-
-        console.log(chalk.blue(`\n📤 上传文件夹到阿里云 OSS: ${localDir} -> ${ossDir}\n`));
-
-        try
-        {
-            await ossUploadDir(localDir, ossDir);
-            console.log(chalk.green('\n✅ 上传完成！\n'));
-        }
-        catch (error)
-        {
-            console.error(chalk.red(`\n❌ 上传失败: ${error}\n`));
             process.exit(1);
         }
     });

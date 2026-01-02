@@ -26,7 +26,6 @@
         "lint": "eslint . --ext .js,.ts --max-warnings 0",
         "lintfix": "npm run lint -- --fix",
         "docs": "typedoc",
-        "upload_oss": "npm run docs && npx feng3d-cli oss_upload_dir",
         "prepublishOnly": "node scripts/prepublish.js",
         "release": "npm run clean && npm run lint && npm test && npm run build && npm run docs && npm publish",
         "postpublish": "node scripts/postpublish.js",

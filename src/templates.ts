@@ -116,6 +116,14 @@ export function getPullRequestWorkflowTemplate(): string
 }
 
 /**
+ * 获取 GitHub Actions upload-oss workflow 模板内容
+ */
+export function getUploadOssWorkflowTemplate(): string
+{
+    return fs.readFileSync(path.join(TEMPLATES_DIR, '.github/workflows/upload-oss.yml'), 'utf-8');
+}
+
+/**
  * 获取 .husky/pre-commit 模板内容
  */
 export function getHuskyPreCommitTemplate(): string

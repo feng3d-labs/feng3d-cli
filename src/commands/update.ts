@@ -13,6 +13,7 @@ import {
     getPublishWorkflowTemplate,
     getPagesWorkflowTemplate,
     getPullRequestWorkflowTemplate,
+    getUploadOssWorkflowTemplate,
     getTypedocConfigTemplate,
     getTestIndexTemplate,
     getHuskyPreCommitTemplate,
@@ -107,6 +108,10 @@ export async function updateProject(directory: string = '.'): Promise<void>
     // 更新 .github/workflows/pull-request.yml
     await fs.writeFile(path.join(projectDir, '.github/workflows/pull-request.yml'), getPullRequestWorkflowTemplate());
     console.log(chalk.gray('  更新: .github/workflows/pull-request.yml'));
+
+    // 更新 .github/workflows/upload-oss.yml
+    await fs.writeFile(path.join(projectDir, '.github/workflows/upload-oss.yml'), getUploadOssWorkflowTemplate());
+    console.log(chalk.gray('  更新: .github/workflows/upload-oss.yml'));
 
     // 更新 typedoc.json
     const typedocContent = getTypedocConfigTemplate({ repoName });
@@ -293,7 +298,6 @@ const SCRIPTS_ORDER = [
     'lint',
     'lintfix',
     'docs',
-    'upload_oss',
     'prepublishOnly',
     'release',
     'postpublish',
@@ -401,7 +405,6 @@ async function updateDependencies(projectDir: string): Promise<void>
         lint: 'eslint . --ext .js,.ts --max-warnings 0',
         lintfix: 'npm run lint -- --fix',
         docs: 'typedoc',
-        upload_oss: 'npm run docs && npx feng3d-cli oss_upload_dir',
         prepublishOnly: 'node scripts/prepublish.js',
         release: 'npm run clean && npm run lint && npm test && npm run build && npm run docs && npm publish',
         postpublish: 'node scripts/postpublish.js',

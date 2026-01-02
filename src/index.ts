@@ -5,7 +5,6 @@
 
 export { VERSIONS, getDevDependencies } from './versions.js';
 export * from './templates.js';
-export { ossUploadDir } from './commands/oss.js';
 export { createProject } from './commands/create.js';
 export { updateProject } from './commands/update.js';
 
