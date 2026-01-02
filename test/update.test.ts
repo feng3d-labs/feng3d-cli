@@ -69,6 +69,7 @@ describe('feng3d-cli update', () =>
             expect(await fs.pathExists(path.join(tempDir, '.vscode/settings.json'))).toBe(true);
             expect(await fs.pathExists(path.join(tempDir, 'tsconfig.json'))).toBe(true);
             expect(await fs.pathExists(path.join(tempDir, 'vite.config.js'))).toBe(true);
+            expect(await fs.pathExists(path.join(tempDir, 'vitest.config.ts'))).toBe(true);
             expect(await fs.pathExists(path.join(tempDir, 'scripts/prepublish.js'))).toBe(true);
             expect(await fs.pathExists(path.join(tempDir, 'scripts/postpublish.js'))).toBe(true);
             expect(await fs.pathExists(path.join(tempDir, '.husky/pre-commit'))).toBe(true);
@@ -97,6 +98,7 @@ describe('feng3d-cli update', () =>
             expect(await fs.pathExists(path.join(newProjectDir, '.gitignore'))).toBe(true);
             expect(await fs.pathExists(path.join(newProjectDir, 'tsconfig.json'))).toBe(true);
             expect(await fs.pathExists(path.join(newProjectDir, 'vite.config.js'))).toBe(true);
+            expect(await fs.pathExists(path.join(newProjectDir, 'vitest.config.ts'))).toBe(true);
         });
     });
 
@@ -120,7 +122,7 @@ describe('feng3d-cli update', () =>
             expect(packageJson.scripts.release).toBeDefined();
         });
 
-        test('不覆盖已存在的脚本', async () =>
+        test('强制覆盖已存在的脚本', async () =>
         {
             await createPackageJson(tempDir, {
                 scripts: {
@@ -133,10 +135,9 @@ describe('feng3d-cli update', () =>
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
-            // 已存在的脚本不应被覆盖
-            expect(packageJson.scripts.build).toBe('custom build command');
-            expect(packageJson.scripts.test).toBe('custom test command');
-            // 新脚本应被添加
+            // 脚本应被强制覆盖为标准值
+            expect(packageJson.scripts.build).toBe('vite build && tsc');
+            expect(packageJson.scripts.test).toBe('vitest run');
             expect(packageJson.scripts.clean).toBe('rimraf lib dist public');
         });
 
@@ -155,7 +156,7 @@ describe('feng3d-cli update', () =>
             expect(packageJson.devDependencies.typedoc).toBeDefined();
         });
 
-        test('添加入口点配置（仅当不存在时）', async () =>
+        test('添加入口点配置', async () =>
         {
             await createPackageJson(tempDir);
 
@@ -170,7 +171,7 @@ describe('feng3d-cli update', () =>
             expect(packageJson.exports).toBeDefined();
         });
 
-        test('不覆盖已存在的入口点配置', async () =>
+        test('强制覆盖已存在的入口点配置', async () =>
         {
             await createPackageJson(tempDir, {
                 type: 'commonjs',
@@ -183,17 +184,23 @@ describe('feng3d-cli update', () =>
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
-            // 已存在的配置不应被覆盖
-            expect(packageJson.type).toBe('commonjs');
-            expect(packageJson.main).toBe('./lib/index.js');
-            expect(packageJson.types).toBe('./lib/index.d.ts');
-            expect(packageJson.exports).toEqual({ '.': './lib/index.js' });
+            // 配置应被强制覆盖为标准值
+            expect(packageJson.type).toBe('module');
+            expect(packageJson.main).toBe('./src/index.ts');
+            expect(packageJson.types).toBe('./src/index.ts');
+            expect(packageJson.exports).toEqual({
+                '.': {
+                    types: './src/index.ts',
+                    import: './src/index.ts',
+                    require: './src/index.ts',
+                },
+            });
         });
     });
 
     describe('文件创建与覆盖', () =>
     {
-        test('.gitignore 仅在不存在时创建', async () =>
+        test('.gitignore 强制覆盖', async () =>
         {
             const customGitignore = '# Custom gitignore\nnode_modules/\n';
 
@@ -204,11 +211,12 @@ describe('feng3d-cli update', () =>
 
             const content = await fs.readFile(path.join(tempDir, '.gitignore'), 'utf-8');
 
-            // .gitignore 应该完全保留自定义内容
-            expect(content).toBe(customGitignore);
+            // .gitignore 应该被模板内容覆盖
+            expect(content).not.toBe(customGitignore);
+            expect(content).toContain('node_modules');
         });
 
-        test('LICENSE 仅在不存在时创建', async () =>
+        test('LICENSE 强制覆盖', async () =>
         {
             const customLicense = 'Custom License Content';
 
@@ -219,10 +227,12 @@ describe('feng3d-cli update', () =>
 
             const content = await fs.readFile(path.join(tempDir, 'LICENSE'), 'utf-8');
 
-            expect(content).toBe(customLicense);
+            // LICENSE 应该被模板内容覆盖
+            expect(content).not.toBe(customLicense);
+            expect(content).toContain('MIT 许可证');
         });
 
-        test('tsconfig.json 已存在时不被覆盖', async () =>
+        test('tsconfig.json 强制覆盖', async () =>
         {
             const customTsconfig = { compilerOptions: { target: 'ES5' } };
 
@@ -233,11 +243,11 @@ describe('feng3d-cli update', () =>
 
             const content = await fs.readJson(path.join(tempDir, 'tsconfig.json'));
 
-            // 已存在的文件不应被覆盖
-            expect(content.compilerOptions.target).toBe('ES5');
+            // tsconfig.json 应该被模板内容覆盖
+            expect(content.compilerOptions.target).not.toBe('ES5');
         });
 
-        test('vite.config.js 已存在时不被覆盖', async () =>
+        test('vite.config.js 强制覆盖', async () =>
         {
             await createPackageJson(tempDir);
             await fs.writeFile(path.join(tempDir, 'vite.config.js'), '// Custom config');
@@ -246,8 +256,23 @@ describe('feng3d-cli update', () =>
 
             const content = await fs.readFile(path.join(tempDir, 'vite.config.js'), 'utf-8');
 
-            // 已存在的文件不应被覆盖
-            expect(content).toBe('// Custom config');
+            // vite.config.js 应该被模板内容覆盖
+            expect(content).not.toBe('// Custom config');
+            expect(content).toContain('defineConfig');
+        });
+
+        test('vitest.config.ts 强制覆盖', async () =>
+        {
+            await createPackageJson(tempDir);
+            await fs.writeFile(path.join(tempDir, 'vitest.config.ts'), '// Custom vitest config');
+
+            await updateProject(tempDir);
+
+            const content = await fs.readFile(path.join(tempDir, 'vitest.config.ts'), 'utf-8');
+
+            // vitest.config.ts 应该被模板内容覆盖
+            expect(content).not.toBe('// Custom vitest config');
+            expect(content).toContain('defineConfig');
         });
     });
 
@@ -269,7 +294,7 @@ describe('feng3d-cli update', () =>
             expect(postpublish).toContain('replace');
         });
 
-        test('不覆盖已存在的发布脚本', async () =>
+        test('强制覆盖已存在的发布脚本', async () =>
         {
             const customScript = '// Custom prepublish script';
 
@@ -281,7 +306,9 @@ describe('feng3d-cli update', () =>
 
             const content = await fs.readFile(path.join(tempDir, 'scripts/prepublish.js'), 'utf-8');
 
-            expect(content).toBe(customScript);
+            // 发布脚本应该被模板内容覆盖
+            expect(content).not.toBe(customScript);
+            expect(content).toContain('replace');
         });
     });
 

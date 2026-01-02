@@ -184,3 +184,11 @@ export function getSrcIndexTemplate(options: { name: string }): string
     return template.replace(/\{\{name\}\}/g, options.name);
 }
 
+/**
+ * 获取 vitest.config.ts 模板内容
+ */
+export function getVitestConfigTemplate(): string
+{
+    return fs.readFileSync(path.join(TEMPLATES_DIR, 'vitest.config.ts'), 'utf-8');
+}
+

@@ -21,6 +21,7 @@ import {
     getVscodeSettingsTemplate,
     getTsconfigTemplateString,
     getViteConfigTemplate,
+    getVitestConfigTemplate,
     getPrepublishScriptTemplate,
     getPostpublishScriptTemplate,
     getPostdocsScriptTemplate,
@@ -75,18 +76,9 @@ export async function updateProject(directory: string = '.'): Promise<void>
     // feng3d-cli 项目：不更新 tsconfig.json 和 vite.config.js（有自定义配置）
     const isFeng3dCli = name === 'feng3d-cli';
 
-    // 更新 .gitignore（仅在文件不存在时创建）
-    const gitignorePath = path.join(projectDir, '.gitignore');
-
-    if (!await fs.pathExists(gitignorePath))
-    {
-        await fs.writeFile(gitignorePath, getGitignoreTemplate());
-        console.log(chalk.gray('  创建: .gitignore'));
-    }
-    else
-    {
-        console.log(chalk.gray('  跳过: .gitignore（已存在）'));
-    }
+    // 更新 .gitignore（强制覆盖）
+    await fs.writeFile(path.join(projectDir, '.gitignore'), getGitignoreTemplate());
+    console.log(chalk.gray('  更新: .gitignore'));
 
     // 更新 .cursorrules
     await fs.writeFile(path.join(projectDir, '.cursorrules'), getCursorrrulesTemplate());
@@ -119,32 +111,14 @@ export async function updateProject(directory: string = '.'): Promise<void>
     await fs.writeFile(path.join(projectDir, 'typedoc.json'), typedocContent);
     console.log(chalk.gray('  更新: typedoc.json'));
 
-    // 更新 test/_.test.ts
+    // 更新 test/_.test.ts（强制覆盖）
     const testDir = path.join(projectDir, 'test');
-    const testFilePath = path.join(testDir, '_.test.ts');
 
-    // 检查测试目录是否有其他文件
-    let hasOtherFiles = false;
+    await fs.ensureDir(testDir);
+    const testContent = getTestIndexTemplate({ name });
 
-    if (await fs.pathExists(testDir))
-    {
-        const files = await fs.readdir(testDir);
-
-        hasOtherFiles = files.some(file => file !== '_.test.ts');
-    }
-
-    if (!hasOtherFiles)
-    {
-        await fs.ensureDir(testDir);
-        const testContent = getTestIndexTemplate({ name });
-
-        await fs.writeFile(testFilePath, testContent);
-        console.log(chalk.gray('  更新: test/_.test.ts'));
-    }
-    else
-    {
-        console.log(chalk.gray('  跳过: test/_.test.ts（测试目录已有其他文件）'));
-    }
+    await fs.writeFile(path.join(testDir, '_.test.ts'), testContent);
+    console.log(chalk.gray('  更新: test/_.test.ts'));
 
     // 更新依赖版本
     await updateDependencies(projectDir);
@@ -156,87 +130,53 @@ export async function updateProject(directory: string = '.'): Promise<void>
     console.log(chalk.gray('  更新: .husky/pre-commit'));
     await updateHuskyConfig(projectDir);
 
-    // 更新 LICENSE 文件（仅在不存在时创建）
-    const licensePath = path.join(projectDir, 'LICENSE');
-
-    if (!await fs.pathExists(licensePath))
-    {
-        await fs.writeFile(licensePath, getLicenseTemplate());
-        console.log(chalk.gray('  创建: LICENSE'));
-    }
-    else
-    {
-        console.log(chalk.gray('  跳过: LICENSE（已存在）'));
-    }
+    // 更新 LICENSE 文件（强制覆盖）
+    await fs.writeFile(path.join(projectDir, 'LICENSE'), getLicenseTemplate());
+    console.log(chalk.gray('  更新: LICENSE'));
 
     // 更新 .vscode/settings.json
     await fs.ensureDir(path.join(projectDir, '.vscode'));
     await fs.writeFile(path.join(projectDir, '.vscode/settings.json'), getVscodeSettingsTemplate());
     console.log(chalk.gray('  更新: .vscode/settings.json'));
 
-    // 更新 tsconfig.json（仅在不存在时创建，feng3d-cli 跳过）
+    // 更新 tsconfig.json（强制覆盖，feng3d-cli 跳过）
     if (!isFeng3dCli)
     {
-        const tsconfigPath = path.join(projectDir, 'tsconfig.json');
-
-        if (!await fs.pathExists(tsconfigPath))
-        {
-            await fs.writeFile(tsconfigPath, getTsconfigTemplateString());
-            console.log(chalk.gray('  创建: tsconfig.json'));
-        }
-        else
-        {
-            console.log(chalk.gray('  跳过: tsconfig.json（已存在）'));
-        }
+        await fs.writeFile(path.join(projectDir, 'tsconfig.json'), getTsconfigTemplateString());
+        console.log(chalk.gray('  更新: tsconfig.json'));
     }
 
-    // 更新 vite.config.js（仅在不存在时创建，feng3d-cli 跳过）
+    // 更新 vite.config.js（强制覆盖，feng3d-cli 跳过）
     if (!isFeng3dCli)
     {
-        const viteConfigPath = path.join(projectDir, 'vite.config.js');
-
-        if (!await fs.pathExists(viteConfigPath))
-        {
-            await fs.writeFile(viteConfigPath, getViteConfigTemplate());
-            console.log(chalk.gray('  创建: vite.config.js'));
-        }
-        else
-        {
-            console.log(chalk.gray('  跳过: vite.config.js（已存在）'));
-        }
+        await fs.writeFile(path.join(projectDir, 'vite.config.js'), getViteConfigTemplate());
+        console.log(chalk.gray('  更新: vite.config.js'));
     }
 
-    // 更新发布脚本（仅在不存在时创建）
+    // 更新 vitest.config.ts（强制覆盖，feng3d-cli 跳过）
+    if (!isFeng3dCli)
+    {
+        await fs.writeFile(path.join(projectDir, 'vitest.config.ts'), getVitestConfigTemplate());
+        console.log(chalk.gray('  更新: vitest.config.ts'));
+    }
+
+    // 更新发布脚本（强制覆盖）
     const scriptsDir = path.join(projectDir, 'scripts');
-    const prepublishPath = path.join(scriptsDir, 'prepublish.js');
-    const postpublishPath = path.join(scriptsDir, 'postpublish.js');
 
-    if (!await fs.pathExists(prepublishPath))
-    {
-        await fs.ensureDir(scriptsDir);
-        await fs.writeFile(prepublishPath, getPrepublishScriptTemplate());
-        console.log(chalk.gray('  创建: scripts/prepublish.js'));
-    }
+    await fs.ensureDir(scriptsDir);
+    await fs.writeFile(path.join(scriptsDir, 'prepublish.js'), getPrepublishScriptTemplate());
+    console.log(chalk.gray('  更新: scripts/prepublish.js'));
 
-    if (!await fs.pathExists(postpublishPath))
-    {
-        await fs.ensureDir(scriptsDir);
-        await fs.writeFile(postpublishPath, getPostpublishScriptTemplate());
-        console.log(chalk.gray('  创建: scripts/postpublish.js'));
-    }
+    await fs.writeFile(path.join(scriptsDir, 'postpublish.js'), getPostpublishScriptTemplate());
+    console.log(chalk.gray('  更新: scripts/postpublish.js'));
 
-    // 如果存在 examples 目录，创建 postdocs.js 脚本
+    // 如果存在 examples 目录，更新 postdocs.js 脚本（强制覆盖）
     const examplesDir = path.join(projectDir, 'examples');
-    const postdocsPath = path.join(scriptsDir, 'postdocs.js');
 
     if (await fs.pathExists(examplesDir))
     {
-        if (!await fs.pathExists(postdocsPath))
-        {
-            await fs.ensureDir(scriptsDir);
-            await fs.writeFile(postdocsPath, getPostdocsScriptTemplate());
-            console.log(chalk.gray('  创建: scripts/postdocs.js'));
-        }
+        await fs.writeFile(path.join(scriptsDir, 'postdocs.js'), getPostdocsScriptTemplate());
+        console.log(chalk.gray('  更新: scripts/postdocs.js'));
     }
 }
 
@@ -419,22 +359,23 @@ async function updateDependencies(projectDir: string): Promise<void>
         standardScripts.postdocs = 'node scripts/postdocs.js && cd examples && vite build --outDir ../public';
     }
 
+    // 强制覆盖标准 scripts
     for (const [key, value] of Object.entries(standardScripts))
     {
-        if (!(key in packageJson.scripts))
+        if (packageJson.scripts[key] !== value)
         {
             packageJson.scripts[key] = value;
             updated = true;
-            console.log(chalk.gray(`  添加: scripts.${key}`));
+            console.log(chalk.gray(`  更新: scripts.${key}`));
         }
     }
 
-    // 设置标准入口点配置（配合 prepublish/postpublish 脚本使用，仅在不存在时添加）
-    if (!packageJson.type)
+    // 设置标准入口点配置（强制覆盖）
+    if (packageJson.type !== 'module')
     {
         packageJson.type = 'module';
         updated = true;
-        console.log(chalk.gray('  添加: type = "module"'));
+        console.log(chalk.gray('  更新: type = "module"'));
     }
 
     const entryPoints = {
@@ -445,26 +386,28 @@ async function updateDependencies(projectDir: string): Promise<void>
 
     for (const [key, value] of Object.entries(entryPoints))
     {
-        if (!(key in packageJson))
+        if (packageJson[key] !== value)
         {
             packageJson[key] = value;
             updated = true;
-            console.log(chalk.gray(`  添加: ${key} = "${value}"`));
+            console.log(chalk.gray(`  更新: ${key} = "${value}"`));
         }
     }
 
-    // 设置 exports 配置（仅在不存在时添加）
-    if (!packageJson.exports)
+    // 设置 exports 配置（强制覆盖）
+    const standardExports = {
+        '.': {
+            types: './src/index.ts',
+            import: './src/index.ts',
+            require: './src/index.ts',
+        },
+    };
+
+    if (JSON.stringify(packageJson.exports) !== JSON.stringify(standardExports))
     {
-        packageJson.exports = {
-            '.': {
-                types: './src/index.ts',
-                import: './src/index.ts',
-                require: './src/index.ts',
-            },
-        };
+        packageJson.exports = standardExports;
         updated = true;
-        console.log(chalk.gray('  添加: exports'));
+        console.log(chalk.gray('  更新: exports'));
     }
 
     // 只有在有更新时才写入文件
@@ -496,25 +439,25 @@ async function updateHuskyConfig(projectDir: string): Promise<void>
     const packageJson = JSON.parse(originalContent);
     let updated = false;
 
-    // 添加 husky 和 lint-staged 依赖
+    // 强制覆盖 husky 和 lint-staged 依赖
     if (!packageJson.devDependencies)
     {
         packageJson.devDependencies = {};
     }
-    if (!packageJson.devDependencies.husky)
+    if (packageJson.devDependencies.husky !== VERSIONS.husky)
     {
         packageJson.devDependencies.husky = VERSIONS.husky;
         updated = true;
-        console.log(chalk.gray(`  添加: devDependencies.husky = "${VERSIONS.husky}"`));
+        console.log(chalk.gray(`  更新: devDependencies.husky = "${VERSIONS.husky}"`));
     }
-    if (!packageJson.devDependencies['lint-staged'])
+    if (packageJson.devDependencies['lint-staged'] !== VERSIONS['lint-staged'])
     {
         packageJson.devDependencies['lint-staged'] = VERSIONS['lint-staged'];
         updated = true;
-        console.log(chalk.gray(`  添加: devDependencies.lint-staged = "${VERSIONS['lint-staged']}"`));
+        console.log(chalk.gray(`  更新: devDependencies.lint-staged = "${VERSIONS['lint-staged']}"`));
     }
 
-    // 添加 prepare 脚本
+    // 强制覆盖 prepare 脚本
     if (!packageJson.scripts)
     {
         packageJson.scripts = {};
@@ -523,17 +466,19 @@ async function updateHuskyConfig(projectDir: string): Promise<void>
     {
         packageJson.scripts.prepare = 'husky';
         updated = true;
-        console.log(chalk.gray('  添加: scripts.prepare = "husky"'));
+        console.log(chalk.gray('  更新: scripts.prepare = "husky"'));
     }
 
-    // 添加 lint-staged 配置
-    if (!packageJson['lint-staged'])
+    // 强制覆盖 lint-staged 配置
+    const standardLintStaged = {
+        '*.{js,ts}': ['eslint --fix --max-warnings 0'],
+    };
+
+    if (JSON.stringify(packageJson['lint-staged']) !== JSON.stringify(standardLintStaged))
     {
-        packageJson['lint-staged'] = {
-            '*.{js,ts}': ['eslint --fix --max-warnings 0'],
-        };
+        packageJson['lint-staged'] = standardLintStaged;
         updated = true;
-        console.log(chalk.gray('  添加: lint-staged 配置'));
+        console.log(chalk.gray('  更新: lint-staged 配置'));
     }
 
     // 只有在有更新时才写入文件
