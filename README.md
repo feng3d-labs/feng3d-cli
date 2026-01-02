@@ -1,4 +1,4 @@
-feng3d 命令行工具，包含项目规范、配置模板、OSS 上传等功能。
+feng3d 命令行工具，包含项目规范、配置模板等功能。
 
 ## 功能特性
 
@@ -6,8 +6,8 @@ feng3d 命令行工具，包含项目规范、配置模板、OSS 上传等功能
 - 📦 统一的依赖版本管理
 - 🛠️ CLI 工具支持创建和更新项目
 - 📝 项目模板（LICENSE, .gitignore, .cursorrules, tsconfig.json, vite.config.js 等）
-- 🔄 GitHub Actions 工作流模板
-- 📤 阿里云 OSS 文件上传
+- 🔄 GitHub Actions 工作流模板（CI/CD、GitHub Pages 部署、OSS 上传）
+- ✅ Git pre-commit 钩子（代码规范检查 + 单元测试）
 
 ## 使用方式
 
@@ -39,29 +39,7 @@ npx feng3d-cli update -d ./my-project  # 指定项目目录
 
 更新项目的所有规范配置文件，包括 ESLint、TypeScript、Vite、GitHub Actions 等。
 
-### 上传到阿里云 OSS
-
-```bash
-npx feng3d-cli oss_upload_dir                           # 上传 ./public 目录
-npx feng3d-cli oss_upload_dir -l ./dist                 # 指定本地目录
-npx feng3d-cli oss_upload_dir -l ./public -o my-project # 指定 OSS 目录
-```
-
-选项：
-- `-l, --local_dir <dir>` - 本地目录（默认：./public）
-- `-o, --oss_dir <dir>` - OSS 目录（默认：从 package.json 的 name 获取）
-
-> 注意：需要在用户目录下创建 `oss_config.json` 配置 OSS 访问密钥（如 `~/oss_config.json`）
->
-> 配置文件格式：
-> ```json
-> {
->   "region": "oss-cn-hangzhou",
->   "accessKeyId": "your-access-key-id",
->   "accessKeySecret": "your-access-key-secret",
->   "bucket": "your-bucket-name"
-> }
-> ```
+> 注意：如果项目中存在 `examples` 目录，会自动添加 `examples:dev` 和 `postdocs` 脚本。
 
 ## 编程使用
 
@@ -81,7 +59,6 @@ import {
     // 项目操作
     createProject,
     updateProject,
-    ossUploadDir,
 } from 'feng3d-cli';
 ```
 
@@ -97,10 +74,28 @@ import {
 | eslint.config.js | ESLint 配置 |
 | typedoc.json | TypeDoc 配置 |
 | .vscode/settings.json | VS Code 设置 |
-| .husky/pre-commit | Git pre-commit hook |
-| .github/workflows/*.yml | GitHub Actions 工作流 |
+| .husky/pre-commit | Git pre-commit 钩子（代码规范 + 单元测试） |
 | scripts/prepublish.js | 发布前脚本 |
 | scripts/postpublish.js | 发布后脚本 |
+| scripts/postdocs.js | 文档生成后处理脚本（移动到 public/doc） |
+
+## GitHub Actions 工作流
+
+| 工作流文件 | 说明 |
+|------|------|
+| pull-request.yml | 代码检查和测试（PR 或推送时触发） |
+| publish.yml | 发布到 npm（创建 Release 时触发） |
+| pages.yml | 部署文档到 GitHub Pages（发布成功后或手动触发） |
+| upload-oss.yml | 上传到阿里云 OSS（发布成功后或手动触发） |
+
+### OSS 上传配置
+
+要启用 OSS 上传功能，需要在 GitHub 仓库的 Settings > Secrets and variables > Actions 中配置以下密钥：
+
+- `OSS_REGION` - OSS 区域（如 `oss-cn-hangzhou`）
+- `OSS_ACCESS_KEY_ID` - 阿里云 AccessKey ID
+- `OSS_ACCESS_KEY_SECRET` - 阿里云 AccessKey Secret
+- `OSS_BUCKET` - OSS Bucket 名称
 
 ## 统一版本
 
@@ -129,6 +124,11 @@ import {
 - 使用简体中文
 - 遵循 Conventional Commits 格式
 - 类型：feat, fix, refactor, perf, style, docs, test, chore, build, ci
+
+### Pre-commit 检查
+提交代码前会自动执行：
+1. **代码规范检查** - 使用 ESLint 检查代码风格
+2. **单元测试** - 运行 vitest 确保测试通过
 
 ## 许可证
 
