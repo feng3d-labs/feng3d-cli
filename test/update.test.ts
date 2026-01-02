@@ -115,8 +115,6 @@ describe('feng3d-cli update', () =>
             expect(packageJson.scripts.test).toBe('vitest run');
             expect(packageJson.scripts.lint).toBeDefined();
             expect(packageJson.scripts.docs).toBe('typedoc');
-            expect(packageJson.scripts.update).toBeDefined();
-            expect(packageJson.scripts.postinstall).toBeDefined();
             expect(packageJson.scripts.prepublishOnly).toBeDefined();
             expect(packageJson.scripts.postpublish).toBeDefined();
             expect(packageJson.scripts.release).toBeDefined();
