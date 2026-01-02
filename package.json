@@ -1,6 +1,6 @@
 {
   "name": "feng3d-cli",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "feng3d 项目通用标准，包含代码规范、配置模板和 CLI 工具",
   "homepage": "https://feng3d.com/feng3d-cli/",
   "author": "feng",
@@ -75,5 +75,12 @@
     "*.{js,ts}": [
       "eslint --fix --max-warnings 0"
     ]
-  }
+  },
+  "workspaces": [
+    ".",
+    "./examples",
+    "./test_web",
+    "packages/*",
+    "packages/*/examples"
+  ]
 }

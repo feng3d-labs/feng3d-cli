@@ -227,6 +227,7 @@ const PACKAGE_JSON_FIELD_ORDER = [
     'dependencies',
     'peerDependencies',
     'lint-staged',
+    'workspaces',
 ];
 
 /**
@@ -364,14 +365,14 @@ async function updateDependencies(projectDir: string): Promise<void>
         standardScripts.postdocs = 'node scripts/postdocs.js && cd examples && vite build --outDir ../public';
     }
 
-    // 强制覆盖标准 scripts
+    // 如果 scripts 不存在则添加，存在时不覆盖
     for (const [key, value] of Object.entries(standardScripts))
     {
-        if (packageJson.scripts[key] !== value)
+        if (!(key in packageJson.scripts))
         {
             packageJson.scripts[key] = value;
             updated = true;
-            console.log(chalk.gray(`  更新: scripts.${key}`));
+            console.log(chalk.gray(`  添加: scripts.${key}`));
         }
     }
 
@@ -413,6 +414,20 @@ async function updateDependencies(projectDir: string): Promise<void>
         packageJson.exports = standardExports;
         updated = true;
         console.log(chalk.gray('  更新: exports'));
+    }
+
+    // 如果 workspaces 不存在则添加
+    if (!packageJson.workspaces)
+    {
+        packageJson.workspaces = [
+            '.',
+            './examples',
+            './test_web',
+            'packages/*',
+            'packages/*/examples',
+        ];
+        updated = true;
+        console.log(chalk.gray('  添加: workspaces'));
     }
 
     // 只有在有更新时才写入文件

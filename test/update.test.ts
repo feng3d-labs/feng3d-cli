@@ -122,7 +122,7 @@ describe('feng3d-cli update', () =>
             expect(packageJson.scripts.release).toBeDefined();
         });
 
-        test('强制覆盖已存在的脚本', async () =>
+        test('不覆盖已存在的脚本', async () =>
         {
             await createPackageJson(tempDir, {
                 scripts: {
@@ -135,9 +135,10 @@ describe('feng3d-cli update', () =>
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
-            // 脚本应被强制覆盖为标准值
-            expect(packageJson.scripts.build).toBe('vite build && tsc');
-            expect(packageJson.scripts.test).toBe('vitest run');
+            // 已存在的脚本不应被覆盖
+            expect(packageJson.scripts.build).toBe('custom build command');
+            expect(packageJson.scripts.test).toBe('custom test command');
+            // 不存在的脚本应被添加
             expect(packageJson.scripts.clean).toBe('rimraf lib dist public');
         });
 

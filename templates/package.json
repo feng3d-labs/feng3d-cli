@@ -66,6 +66,13 @@
         "*.{js,ts}": [
             "eslint --fix --max-warnings 0"
         ]
-    }
+    },
+    "workspaces": [
+        ".",
+        "./examples",
+        "./test_web",
+        "packages/*",
+        "packages/*/examples"
+    ]
 }
 
