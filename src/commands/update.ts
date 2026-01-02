@@ -111,14 +111,19 @@ export async function updateProject(directory: string = '.'): Promise<void>
     await fs.writeFile(path.join(projectDir, 'typedoc.json'), typedocContent);
     console.log(chalk.gray('  更新: typedoc.json'));
 
-    // 更新 test/_.test.ts（强制覆盖）
+    // 创建 test/_.test.ts（仅当 test 目录为空时）
     const testDir = path.join(projectDir, 'test');
 
     await fs.ensureDir(testDir);
-    const testContent = getTestIndexTemplate({ name });
+    const testFiles = await fs.readdir(testDir);
 
-    await fs.writeFile(path.join(testDir, '_.test.ts'), testContent);
-    console.log(chalk.gray('  更新: test/_.test.ts'));
+    if (testFiles.length === 0)
+    {
+        const testContent = getTestIndexTemplate({ name });
+
+        await fs.writeFile(path.join(testDir, '_.test.ts'), testContent);
+        console.log(chalk.gray('  创建: test/_.test.ts'));
+    }
 
     // 更新依赖版本
     await updateDependencies(projectDir);
