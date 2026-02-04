@@ -15,7 +15,9 @@
       "WebFetch(domain:www.skillhub.club)",
       "WebFetch(domain:skillsmp.com)",
       "Bash(dos2unix:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "additionalDirectories": [
       "c:\\feng\\github\\feng3d-cli\\$USERPROFILE\\.claude\\skills"
