@@ -17,7 +17,8 @@
       "Bash(dos2unix:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "WebFetch(domain:skills.sh)"
     ],
     "additionalDirectories": [
       "c:\\feng\\github\\feng3d-cli\\$USERPROFILE\\.claude\\skills"

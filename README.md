@@ -28,9 +28,13 @@ feng3d-cli <command>
 
 ### Claude Code Skill 使用
 
-如果你使用 [Claude Code](https://github.com/anthropics/claude-code)，只需一条命令即可安装：
+如果你使用 Claude Code 或其他 AI 代理，推荐通过 [Skills.sh](https://skills.sh/) 安装：
 
 ```bash
+# 推荐：使用 Skills.sh 生态系统标准方式
+npx skills add feng3d-labs/feng3d-cli
+
+# 或：使用 feng3d-cli 内置命令
 npx feng3d-cli skill
 ```
 

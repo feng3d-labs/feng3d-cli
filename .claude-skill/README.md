@@ -4,20 +4,34 @@
 
 ## 快速安装 🚀
 
-### 方法 1：一条命令安装（最简单）⭐
+### 方法 1：通过 Skills.sh（推荐）⭐
+
+使用 [Skills.sh](https://skills.sh/) 生态系统标准方式：
+
+```bash
+npx skills add feng3d-labs/feng3d-cli
+```
+
+**为什么推荐？**
+- ✅ 生态系统标准方式
+- ✅ 自动索引和发现
+- ✅ 支持多个 AI 代理（Claude Code, Cursor, Windsurf 等）
+- ✅ 安装统计和排行榜
+
+### 方法 2：使用 feng3d-cli 命令
 
 ```bash
 npx feng3d-cli skill
 ```
 
-**就这么简单！** 这条命令会：
+**这条命令会：**
 - ✅ 自动下载 feng3d-cli（如果未安装）
 - ✅ 将 skill 复制到 `~/.claude/skills/feng3d`
 - ✅ 无需额外配置或权限
 
 > 💡 提示：也可以使用完整命令 `npx feng3d-cli install-skill`
 
-如果你需要经常使用，可以先全局安装：
+**全局安装：**
 
 ```bash
 npm install -g feng3d-cli
