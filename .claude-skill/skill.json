@@ -1,0 +1,21 @@
+{
+  "name": "feng3d",
+  "version": "0.1.0",
+  "description": "创建或更新符合 feng3d 规范的项目",
+  "author": "feng",
+  "commands": {
+    "create": {
+      "description": "创建新的 feng3d 项目",
+      "usage": "/feng3d create <project-name> [options]"
+    },
+    "update": {
+      "description": "更新当前项目的 feng3d 规范配置",
+      "usage": "/feng3d update [options]"
+    }
+  },
+  "repository": "https://github.com/feng3d-labs/feng3d-cli",
+  "cli": {
+    "command": "npx feng3d-cli",
+    "package": "feng3d-cli"
+  }
+}

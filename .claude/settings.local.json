@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command:*)",
+      "Bash(dir:*)",
+      "Bash(npx feng3d-cli create:*)",
+      "Bash(npx feng3d-cli:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm install)",
+      "Bash(node bin/cli.js:*)",
+      "Bash(npm link)",
+      "Bash(feng3d --help:*)",
+      "Bash(feng3d install-skill:*)",
+      "Bash(feng3d-cli:*)",
+      "WebFetch(domain:www.skillhub.club)",
+      "WebFetch(domain:skillsmp.com)",
+      "Bash(dos2unix:*)",
+      "Bash(git add:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\feng\\github\\feng3d-cli\\$USERPROFILE\\.claude\\skills"
+    ]
+  }
+}

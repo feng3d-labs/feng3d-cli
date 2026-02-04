@@ -6,7 +6,7 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { createProject, updateProject } from '../dist/index.js';
+import { createProject, updateProject, installSkill } from '../dist/index.js';
 
 const program = new Command();
 
@@ -51,6 +51,23 @@ program
         catch (error)
         {
             console.error(chalk.red(`\n❌ 更新失败: ${error}\n`));
+            process.exit(1);
+        }
+    });
+
+program
+    .command('install-skill')
+    .alias('skill')
+    .description('安装 feng3d Claude Code Skill')
+    .action(async () =>
+    {
+        try
+        {
+            await installSkill();
+        }
+        catch (error)
+        {
+            console.error(chalk.red(`\n❌ 安装失败: ${error}\n`));
             process.exit(1);
         }
     });

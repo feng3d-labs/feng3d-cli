@@ -11,11 +11,45 @@ feng3d 命令行工具，包含项目规范、配置模板等功能。
 
 ## 使用方式
 
+### CLI 命令行使用
+
 推荐使用 `npx` 直接运行，无需安装：
 
 ```bash
 npx feng3d-cli <command>
 ```
+
+或全局安装：
+
+```bash
+npm install -g feng3d-cli
+feng3d-cli <command>
+```
+
+### Claude Code Skill 使用
+
+如果你使用 [Claude Code](https://github.com/anthropics/claude-code)，只需一条命令即可安装：
+
+```bash
+npx feng3d-cli skill
+```
+
+手动安装：
+```bash
+mkdir -p ~/.claude/skills
+cp -r .claude-skill ~/.claude/skills/feng3d
+```
+
+安装后，在 Claude Code 中可以直接使用：
+
+```bash
+/feng3d create my-project
+/feng3d update
+```
+
+或者直接对话："用 feng3d 创建一个新项目"
+
+详细说明见 [.claude-skill/README.md](./.claude-skill/README.md)
 
 ## CLI 命令
 
@@ -36,6 +70,14 @@ npx feng3d-cli create my-project
 npx feng3d-cli update
 npx feng3d-cli update -d ./my-project  # 指定项目目录
 ```
+
+### 安装 Claude Code Skill
+
+```bash
+npx feng3d-cli skill
+```
+
+> 💡 提示：也可以使用完整命令 `npx feng3d-cli install-skill`
 
 更新项目的所有规范配置文件，包括 ESLint、TypeScript、Vite、GitHub Actions 等。
 

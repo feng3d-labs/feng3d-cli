@@ -7,4 +7,5 @@ export { VERSIONS, getDevDependencies } from './versions.js';
 export * from './templates.js';
 export { createProject } from './commands/create.js';
 export { updateProject } from './commands/update.js';
+export { installSkill } from './commands/install-skill.js';
 

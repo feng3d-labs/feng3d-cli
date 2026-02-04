@@ -1,6 +1,6 @@
 {
   "name": "feng3d-cli",
-  "version": "0.0.12",
+  "version": "0.1.0",
   "description": "feng3d 项目通用标准，包含代码规范、配置模板和 CLI 工具",
   "homepage": "https://feng3d.com/feng3d-cli/",
   "author": "feng",
@@ -44,7 +44,8 @@
     "bin",
     "dist",
     "lib",
-    "templates"
+    "templates",
+    ".claude-skill"
   ],
   "devDependencies": {
     "@eslint/js": "9.0.0",
