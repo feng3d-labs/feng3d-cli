@@ -9,8 +9,14 @@
 使用 [Skills.sh](https://skills.sh/) 生态系统标准方式：
 
 ```bash
+# macOS / Linux
 npx skills add feng3d-labs/feng3d-cli
+
+# Windows (需要显式指定 agent)
+npx skills add feng3d-labs/feng3d-cli --agent claude-code -g -y
 ```
+
+> **Windows 用户注意**：由于 skills.sh 的环境检测问题，在 Windows 上需要添加 `--agent claude-code` 参数来显式指定代理类型。
 
 **为什么推荐？**
 - ✅ 生态系统标准方式

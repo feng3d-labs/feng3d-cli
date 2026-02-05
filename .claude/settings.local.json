@@ -18,7 +18,14 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "WebFetch(domain:skills.sh)"
+      "WebFetch(domain:skills.sh)",
+      "Bash(echo:*)",
+      "Bash(node --version:*)",
+      "Bash(env:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(npx skills add feng3d-labs/feng3d-cli --agent claude-code)",
+      "Bash(npx skills add:*)",
+      "Bash(npx skills:*)"
     ],
     "additionalDirectories": [
       "c:\\feng\\github\\feng3d-cli\\$USERPROFILE\\.claude\\skills"

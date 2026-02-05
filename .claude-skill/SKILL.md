@@ -1,7 +1,7 @@
 ---
 name: "feng3d-cli"
 description: "Create and update feng3d projects with unified standards, including ESLint, TypeScript, Vite, GitHub Actions, and pre-commit hooks. Automate project setup and configuration management for feng3d development."
-version: "0.1.1"
+version: "0.1.2"
 author: "feng"
 category: "Development"
 tags:
