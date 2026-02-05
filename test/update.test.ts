@@ -58,7 +58,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             // 检查文件是否创建
             expect(await fs.pathExists(path.join(tempDir, '.gitignore'))).toBe(true);
@@ -82,7 +82,7 @@ describe('feng3d-cli update', () =>
         {
             const newProjectDir = path.join(tempDir, 'new-project');
 
-            await updateProject(newProjectDir);
+            await updateProject({ directory: newProjectDir });
 
             // 应该创建 package.json
             expect(await fs.pathExists(path.join(newProjectDir, 'package.json'))).toBe(true);
@@ -108,7 +108,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir, { scripts: {} });
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
@@ -131,7 +131,7 @@ describe('feng3d-cli update', () =>
                 },
             });
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
@@ -146,7 +146,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
@@ -161,7 +161,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
@@ -181,7 +181,7 @@ describe('feng3d-cli update', () =>
                 exports: { '.': './lib/index.js' },
             });
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
@@ -208,7 +208,7 @@ describe('feng3d-cli update', () =>
             await createPackageJson(tempDir);
             await fs.writeFile(path.join(tempDir, '.gitignore'), customGitignore);
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             const content = await fs.readFile(path.join(tempDir, '.gitignore'), 'utf-8');
 
@@ -224,7 +224,7 @@ describe('feng3d-cli update', () =>
             await createPackageJson(tempDir);
             await fs.writeFile(path.join(tempDir, 'LICENSE'), customLicense);
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             const content = await fs.readFile(path.join(tempDir, 'LICENSE'), 'utf-8');
 
@@ -240,7 +240,7 @@ describe('feng3d-cli update', () =>
             await createPackageJson(tempDir);
             await fs.writeJson(path.join(tempDir, 'tsconfig.json'), customTsconfig);
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             const content = await fs.readJson(path.join(tempDir, 'tsconfig.json'));
 
@@ -253,7 +253,7 @@ describe('feng3d-cli update', () =>
             await createPackageJson(tempDir);
             await fs.writeFile(path.join(tempDir, 'vite.config.js'), '// Custom config');
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             const content = await fs.readFile(path.join(tempDir, 'vite.config.js'), 'utf-8');
 
@@ -267,7 +267,7 @@ describe('feng3d-cli update', () =>
             await createPackageJson(tempDir);
             await fs.writeFile(path.join(tempDir, 'vitest.config.ts'), '// Custom vitest config');
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             const content = await fs.readFile(path.join(tempDir, 'vitest.config.ts'), 'utf-8');
 
@@ -283,7 +283,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             expect(await fs.pathExists(path.join(tempDir, 'scripts/prepublish.js'))).toBe(true);
             expect(await fs.pathExists(path.join(tempDir, 'scripts/postpublish.js'))).toBe(true);
@@ -303,7 +303,7 @@ describe('feng3d-cli update', () =>
             await fs.ensureDir(path.join(tempDir, 'scripts'));
             await fs.writeFile(path.join(tempDir, 'scripts/prepublish.js'), customScript);
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             const content = await fs.readFile(path.join(tempDir, 'scripts/prepublish.js'), 'utf-8');
 
@@ -319,7 +319,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             expect(await fs.pathExists(path.join(tempDir, '.husky/pre-commit'))).toBe(true);
 
@@ -332,7 +332,7 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
 
@@ -347,11 +347,198 @@ describe('feng3d-cli update', () =>
         {
             await createPackageJson(tempDir);
 
-            await updateProject(tempDir);
+            await updateProject({ directory: tempDir });
 
             expect(await fs.pathExists(path.join(tempDir, '.github/workflows/publish.yml'))).toBe(true);
             expect(await fs.pathExists(path.join(tempDir, '.github/workflows/pages.yml'))).toBe(true);
             expect(await fs.pathExists(path.join(tempDir, '.github/workflows/pull-request.yml'))).toBe(true);
+        });
+    });
+
+    describe('智能合并策略', () =>
+    {
+        test('merge 策略：JSON 文件智能合并', async () =>
+        {
+            const customTypedoc = {
+                entryPoints: ['src/custom.ts'],
+                out: 'custom-docs',
+                customField: 'custom value',
+            };
+
+            await createPackageJson(tempDir);
+            await fs.writeJson(path.join(tempDir, 'typedoc.json'), customTypedoc, { spaces: 2 });
+
+            await updateProject({ directory: tempDir, mergeStrategy: 'merge' });
+
+            const result = await fs.readJson(path.join(tempDir, 'typedoc.json'));
+
+            // 应该保留用户的自定义字段
+            expect(result.customField).toBe('custom value');
+            // 应该保留用户的配置
+            expect(result.entryPoints).toEqual(['src/custom.ts']);
+            expect(result.out).toBe('custom-docs');
+            // 应该添加标准配置中缺失的字段
+            expect(result.$schema).toBeDefined();
+        });
+
+        test('overwrite 策略：完全覆盖已存在的文件', async () =>
+        {
+            const customContent = '// Custom eslint config';
+
+            await createPackageJson(tempDir);
+            await fs.writeFile(path.join(tempDir, 'eslint.config.js'), customContent);
+
+            await updateProject({ directory: tempDir, mergeStrategy: 'overwrite' });
+
+            const content = await fs.readFile(path.join(tempDir, 'eslint.config.js'), 'utf-8');
+
+            // 文件应该被完全覆盖
+            expect(content).not.toBe(customContent);
+            expect(content).toContain('export default');
+        });
+
+        test('skip-existing 策略：跳过已存在的文件', async () =>
+        {
+            const customContent = '// Custom config';
+
+            await createPackageJson(tempDir);
+            await fs.writeFile(path.join(tempDir, 'vite.config.js'), customContent);
+
+            await updateProject({ directory: tempDir, mergeStrategy: 'skip-existing' });
+
+            const content = await fs.readFile(path.join(tempDir, 'vite.config.js'), 'utf-8');
+
+            // 文件应该保持不变
+            expect(content).toBe(customContent);
+        });
+
+        test('force 选项：强制覆盖（等同于 overwrite）', async () =>
+        {
+            const customContent = '# Custom cursorrules';
+
+            await createPackageJson(tempDir);
+            await fs.writeFile(path.join(tempDir, '.cursorrules'), customContent);
+
+            await updateProject({ directory: tempDir, force: true });
+
+            const content = await fs.readFile(path.join(tempDir, '.cursorrules'), 'utf-8');
+
+            // 文件应该被覆盖
+            expect(content).not.toBe(customContent);
+        });
+    });
+
+    describe('Monorepo 支持', () =>
+    {
+        test('monorepo 根目录不添加 vitest 和 typedoc 依赖', async () =>
+        {
+            await createPackageJson(tempDir, {
+                workspaces: ['packages/*'],
+            });
+
+            await updateProject({ directory: tempDir });
+
+            const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
+
+            // 不应该添加 vitest 和 typedoc
+            expect(packageJson.devDependencies.vitest).toBeUndefined();
+            expect(packageJson.devDependencies.typedoc).toBeUndefined();
+            // 应该添加其他依赖
+            expect(packageJson.devDependencies.typescript).toBeDefined();
+            expect(packageJson.devDependencies.eslint).toBeDefined();
+        });
+
+        test('monorepo 根目录不添加 test 和 docs 相关 scripts', async () =>
+        {
+            await createPackageJson(tempDir, {
+                workspaces: ['packages/*'],
+            });
+
+            await updateProject({ directory: tempDir });
+
+            const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
+
+            // 不应该添加 test、docs、watch scripts
+            expect(packageJson.scripts.test).toBeUndefined();
+            expect(packageJson.scripts.docs).toBeUndefined();
+            expect(packageJson.scripts.watch).toBeUndefined();
+            // 应该添加其他 scripts
+            expect(packageJson.scripts.build).toBeDefined();
+            expect(packageJson.scripts.lint).toBeDefined();
+            // release 脚本不应包含 npm test 和 npm run docs
+            expect(packageJson.scripts.release).not.toContain('npm test');
+            expect(packageJson.scripts.release).not.toContain('npm run docs');
+        });
+
+        test('monorepo 根目录不创建 typedoc.json 和 vitest.config.ts', async () =>
+        {
+            await createPackageJson(tempDir, {
+                workspaces: ['packages/*'],
+            });
+
+            await updateProject({ directory: tempDir });
+
+            // 不应该创建这些文件
+            expect(await fs.pathExists(path.join(tempDir, 'typedoc.json'))).toBe(false);
+            expect(await fs.pathExists(path.join(tempDir, 'vitest.config.ts'))).toBe(false);
+            expect(await fs.pathExists(path.join(tempDir, 'test/_.test.ts'))).toBe(false);
+            // 应该创建其他文件
+            expect(await fs.pathExists(path.join(tempDir, 'tsconfig.json'))).toBe(true);
+            expect(await fs.pathExists(path.join(tempDir, 'vite.config.js'))).toBe(true);
+        });
+
+        test('非 monorepo 项目正常添加所有依赖和配置', async () =>
+        {
+            await createPackageJson(tempDir);
+
+            await updateProject({ directory: tempDir });
+
+            const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
+
+            // 应该添加 vitest 和 typedoc
+            expect(packageJson.devDependencies.vitest).toBeDefined();
+            expect(packageJson.devDependencies.typedoc).toBeDefined();
+            // 应该添加相关 scripts
+            expect(packageJson.scripts.test).toBeDefined();
+            expect(packageJson.scripts.docs).toBeDefined();
+            expect(packageJson.scripts.watch).toBeDefined();
+            // 应该创建相关文件
+            expect(await fs.pathExists(path.join(tempDir, 'typedoc.json'))).toBe(true);
+            expect(await fs.pathExists(path.join(tempDir, 'vitest.config.ts'))).toBe(true);
+        });
+    });
+
+    describe('Dry-run 模式', () =>
+    {
+        test('dry-run 模式不实际修改文件', async () =>
+        {
+            await createPackageJson(tempDir);
+
+            await updateProject({ directory: tempDir, dryRun: true });
+
+            // 文件不应该被创建
+            expect(await fs.pathExists(path.join(tempDir, 'tsconfig.json'))).toBe(false);
+            expect(await fs.pathExists(path.join(tempDir, 'vite.config.js'))).toBe(false);
+            expect(await fs.pathExists(path.join(tempDir, 'eslint.config.js'))).toBe(false);
+        });
+
+        test('dry-run 模式不修改 package.json', async () =>
+        {
+            const originalContent = {
+                name: 'test-project',
+                version: '1.0.0',
+                scripts: {},
+            };
+
+            await createPackageJson(tempDir, originalContent);
+
+            await updateProject({ directory: tempDir, dryRun: true });
+
+            const packageJson = await fs.readJson(path.join(tempDir, 'package.json'));
+
+            // package.json 不应该被修改
+            expect(packageJson.devDependencies).toBeUndefined();
+            expect(packageJson.scripts.build).toBeUndefined();
         });
     });
 });

@@ -25,7 +25,25 @@
       "WebFetch(domain:github.com)",
       "Bash(npx skills add feng3d-labs/feng3d-cli --agent claude-code)",
       "Bash(npx skills add:*)",
-      "Bash(npx skills:*)"
+      "Bash(npx skills:*)",
+      "WebFetch(domain:zenoh.io)",
+      "Bash(powershell \"Start-Sleep -Seconds 3; cd ''c:\\\\feng\\\\github\\\\dm-ai-core\\\\zenoh_record\\\\packages\\\\zenoh-napi''; npm run build\")",
+      "Bash(tasklist:*)",
+      "Bash(powershell \"Get-Process | Where-Object {$_ProcessName -eq ''node''} | Select-Object Id,ProcessName,StartTime\")",
+      "Bash(copy:*)",
+      "Bash(move /Y:*)",
+      "Bash(npm run example:*)",
+      "Bash(npx napi:*)",
+      "Bash(wc:*)",
+      "Bash(cargo build:*)",
+      "Bash(npm run lint:*)",
+      "Bash(git clean:*)",
+      "Bash(npm test:*)",
+      "Bash(npm install:*)",
+      "Bash(claude mcp add:*)",
+      "Bash(npx:*)",
+      "Bash(npm init:*)",
+      "Bash(git restore:*)"
     ],
     "additionalDirectories": [
       "c:\\feng\\github\\feng3d-cli\\$USERPROFILE\\.claude\\skills"

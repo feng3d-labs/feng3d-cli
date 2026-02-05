@@ -9,6 +9,7 @@ import { getDevDependencies } from '../versions.js';
 import {
     getGitignoreTemplate,
     getCursorrrulesTemplate,
+    getEslintConfigTemplate,
     getTsconfigTemplate,
     getTypedocConfig,
     getPublishWorkflowTemplate,
@@ -17,7 +18,6 @@ import {
     getPostdocsScriptTemplate,
     getSrcIndexTemplate,
 } from '../templates.js';
-import { createEslintConfigFile } from './update.js';
 
 export interface CreateOptions {
     directory: string;
@@ -63,7 +63,7 @@ export async function createProject(name: string, options: CreateOptions): Promi
     console.log(chalk.gray('  创建: .cursorrules'));
 
     // 创建 eslint.config.js
-    await createEslintConfigFile(projectDir);
+    await fs.writeFile(path.join(projectDir, 'eslint.config.js'), getEslintConfigTemplate());
     console.log(chalk.gray('  创建: eslint.config.js'));
 
     // 创建 typedoc.json

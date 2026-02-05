@@ -40,12 +40,16 @@ program
     .command('update')
     .description('更新当前项目的规范配置')
     .option('-d, --directory <dir>', '项目目录', '.')
+    .option('--merge-strategy <strategy>', '合并策略: overwrite (覆盖), merge (合并, 默认), skip-existing (跳过已存在)', 'merge')
+    .option('--interactive', '交互式模式，逐个文件询问处理方式')
+    .option('--dry-run', '预览更改而不实际修改文件')
+    .option('--force', '强制覆盖已存在的配置文件（等同于 --merge-strategy overwrite）')
     .action(async (options) =>
     {
         console.log(chalk.blue('\n🔄 更新项目规范配置\n'));
         try
         {
-            await updateProject(options.directory);
+            await updateProject(options);
             console.log(chalk.green('\n✅ 规范配置更新成功！\n'));
         }
         catch (error)
